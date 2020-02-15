@@ -28,6 +28,8 @@ progext = {"Windows" : ".exe", "Linux" : "", "Darwin" : ""}[system]
 
 allmodules = ["crypt", "math", "network", "sqlite", "stb", "utils"]
 
+check = False
+
 def compileLib(name, rebuild, options):
 	extension = name[name.rfind('.')+1:]
 	compiler = compilers[extension]
@@ -40,20 +42,20 @@ def compileLib(name, rebuild, options):
 	if (not os.path.isfile(target)) or (os.path.getmtime(source) > os.path.getmtime(target)) or (os.path.isfile(header) and os.path.getmtime(header) > os.path.getmtime(target)) or rebuild:
 		print("building", name, "...")
 		command = [compiler, "-c", source, "-fPIC", "-o", target, ("-std=c++17" if (extension == "cpp") else "-std=gnu11"), "-Wall", "-Wno-unused-variable"] + options
-		result = subprocess.run(' '.join(command), shell=True)
+		result = subprocess.run(' '.join(command), shell=True, check=check)
 
 def linkLibs(libs, target):
 	command = [ld, "-relocatable"] + libs + ["-o", target]
-	subprocess.run(' '.join(command), shell=True)
+	subprocess.run(' '.join(command), shell=True, check=check)
 
 def linkDll(source, target, options = []):
 	soname = source[source.rfind('/'):source.rfind('.')]
 	command = [gpp, source, "-shared", "-fPIC", "-o", target, "-Wl,-soname=." + soname + libext] + options
-	subprocess.run(' '.join(command), shell=True)
+	subprocess.run(' '.join(command), shell=True, check=check)
 
 def buildProgramm(path, yeet, options):
 	command = [gpp, "./src/" + path, "-o", "build/" + path[:path.find('.')] + progext, yeet] + options
-	subprocess.run(' '.join(command), shell=True)
+	subprocess.run(' '.join(command), shell=True, check=check)
 
 def src(modules):
 	for root, dirs, files in os.walk("./src"):
@@ -85,6 +87,10 @@ if "-r" in args or "--release" in args:
 	options += ["-O3", "-s", "-D NO_LOG"]
 elif "-d" in args or "--debug" in args:
 	options += ["-g"]
+
+if "-w" in args:
+	options += ["-w"]
+	check = True
 
 if "-c" in args or "--clean" in args:
 	if(os.path.isdir("obj")):

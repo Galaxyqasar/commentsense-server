@@ -1,4 +1,10 @@
 os: linux
+addons:
+  apt:
+    packages:
+      - g++-9
+      - gcc-9
+      - build-essential
 language: cpp
 compiler:
 - gcc
