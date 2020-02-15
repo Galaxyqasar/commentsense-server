@@ -1,6 +1,5 @@
-
 # Comment-Sense Server
-
+[![Build Status](https://travis-ci.com/Galaxyqasar/commentsense-server.svg?branch=master)](https://travis-ci.com/Galaxyqasar/commentsense-server)
 ## this is the server software for comment-sense
 
 ## dependencies:
