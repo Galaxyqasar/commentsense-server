@@ -6,5 +6,6 @@ os: linux
         - gcc-9.2.1
         - build-essential
         - python3
+language: cpp
 script:
 - python3 ./build.py -r 
