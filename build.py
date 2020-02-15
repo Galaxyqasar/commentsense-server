@@ -103,7 +103,6 @@ if(os.path.isdir("build")):
 	rmtree('build')
 os.mkdir("build")
 
-
 for file in src(modules):
 	compileLib(file, rebuild, options)
 	libs.append("./obj/" + file[6:file.rfind('.')] + ".o")
@@ -116,7 +115,9 @@ compileLib("./src/plugin.cpp", rebuild, options)
 compileLib("./src/server.cpp", rebuild, options)
 linkDll("./obj/plugin.o", "./build/plugin" + libext)
 linkDll("./obj/server.o", "./build/server" + libext)
-copytree("www", "build/www")
-copyfile("README.md", "build/www/README.md")
 copyfile("plugins.json", "build/plugins.json")
 copyfile("init.sql", "build/init.sql")
+
+if(os.path.isdir("www")):
+	copytree("www", "build/www")
+	copyfile("README.md", "build/www/README.md")
