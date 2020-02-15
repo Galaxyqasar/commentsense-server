@@ -1,0 +1,10 @@
+os: linux
+  addons:
+    apt:
+      packages:
+        - g++-9.2.1
+        - gcc-9.2.1
+        - build-essential
+        - python3
+script:
+- python3 ./build.py -r 
