@@ -59,6 +59,8 @@
 	- arguments:  (in the url)
 		- count: number of sites
 			- default 5
+		- url: limit sites to the ones that match this url (basic sql pattern matching)
+			- default: any
 	- response:
 		- format: json
 		- possible status-codes: 200
@@ -67,6 +69,7 @@
 	- examples:
 		- "GET /api/sites ..."	// get the 5 most commented sites
 		- "GET /api/sites?count=10 ..."	// get the 10 most commented sites
+		- "GET /api/sites?url=github.com/% ..."	// get all sites that start with "github.com/"
 
 
 - post comment:
