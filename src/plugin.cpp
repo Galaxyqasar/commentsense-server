@@ -227,16 +227,19 @@ export json getComments(PluginArg arg){
 
 export json getTopSites(PluginArg arg){
 	int count = 5;
-	std::string url = arg.request["url"].toStr();
+	std::string url = arg.request["url"].toStr(), pattern = "%";
 	if(url.length() > 11){
 		for(std::string str : split(std::string(url.begin() + 11, url.end()), '&')){
 			if(str.find("count=") == 0 && str.length() > 6){
 				count = atoi(std::string(str.begin() + 6, str.end()).c_str());
 			}
+			else if(str.find("url=") == 0 && str.length() > 4){
+				pattern = std::string(str.begin() + 4, str.end()).c_str();
+			}
 		}
 	}
-	static sqlite::stmt stmt("select count(id) as n,url from comments group by url order by n desc limit ?1;", db, {count});
-	stmt.setArgs({count});	//resets the statement to be reexecuted and updates the arguments
+	static sqlite::stmt stmt("select count(id) as n,url from comments where url like ?1 group by url order by n desc limit ?2;", db, {pattern, count});
+	stmt.setArgs({pattern, count});	//resets the statement to be reexecuted and updates the arguments
 	json sites = json::array("sites", {});
 	while(stmt.status() == SQLITE_ROW){
 		std::array<sqlite::variant, 2> line = stmt.next<2>();
@@ -682,7 +685,6 @@ structure["sqlite_sequence"] = R"(CREATE TABLE sqlite_sequence(name,seq))";
 	int tablecount = 0;
 	for(std::array<sqlite::variant, 3> &table : tables) {
 		if(std::get<std::string>(table[0]) == "table") {
-			std::cout<<std::get<std::string>(table[0])<<" | "<<std::get<std::string>(table[1])<<" | "<<std::get<std::string>(table[2])<<" | "<<bool(structure[std::get<std::string>(table[1])] != std::get<std::string>(table[2]))<<"\n";
 			if(structure[std::get<std::string>(table[1])] != std::get<std::string>(table[2])) {
 				reinitdb = true;
 			}
