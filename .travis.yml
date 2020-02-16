@@ -1,9 +1,6 @@
 os: linux
-dist: eoan
+dist: bionic
 language: cpp
-compiler:
-- gcc
-- g++
+compiler: gcc
 python: "3.7"
-script:
-- python3 ./build.py -r 
+script: python3 ./build.py -r 
