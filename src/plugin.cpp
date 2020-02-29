@@ -544,8 +544,9 @@ export json getUserData(PluginArg arg){
 	std::string cookie = arg.request["header"]["cookie"].toStr();
 	std::string sid = "", username = "", password = "";
 
-	if(url.size() > 11) {
-		for(std::string str : split(std::string(url.begin() + 10, url.end()), '&')){
+	if(url.length() > 11 && url.find('?') < url.length() - 1) {
+		std::string args = std::string(url.begin() + url.find('?')+1, url.end());
+		for(std::string str : split(args, '&')){
 			if(str.find("username=") == 0 && str.length() > 9){
 				username = std::string(str.begin() + 9, str.end());
 			}

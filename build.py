@@ -121,6 +121,8 @@ copyfile("init.sql", "build/init.sql")
 if(os.path.isdir("www")):
 	copytree("www", "build/www")
 	copyfile("README.md", "build/www/README.md")
+else:
+	os.mkdir("build/www")
 
 if "-e" in args:
 	subprocess.run(["sudo", "./server"], cwd="./build")
