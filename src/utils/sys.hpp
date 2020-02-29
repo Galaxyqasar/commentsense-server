@@ -31,4 +31,5 @@ namespace sys {
 #endif
 
 	std::string getTimeStr();
+	std::string runcmd(std::string cmd, std::string mode, std::string args = "");
 }

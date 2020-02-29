@@ -5,9 +5,9 @@
 #define export extern "C" __attribute__((visibility ("default")))
 
 const size_t max_chunk_size = 50*1024*1024;	//50 Mb
-hidden sqlite::database *db;
-hidden logfile *pluginlog;
-hidden std::map<std::string, std::string> *contentTypes;
+hidden sqlite::database *db = nullptr;
+hidden logfile *pluginlog = nullptr;
+hidden std::map<std::string, std::string> contentTypes;
 
 hidden int getUserId(std::string username) {
 	std::vector<std::array<sqlite::variant, 1>> result = db->exec<1>("select id from users where name like ?1;", {username});
@@ -22,7 +22,7 @@ hidden int getUserId(std::string username) {
 hidden std::string getContentType(std::string filename) {
 	unsigned pos = filename.rfind('.');
 	std::string ending(filename.begin() + (pos < filename.length() ? pos+1 : 0), filename.end());
-	return (*contentTypes)[ending];
+	return contentTypes[ending];
 }
 
 hidden bool isUserValid(std::string username, std::string password) {
@@ -124,7 +124,21 @@ export json getFile(PluginArg arg) {
 	else {
 		encoding = "identity";
 	}
-
+/*	minimal php support
+	if(std::string(url.begin() + min(url.rfind('.'), url.size()-1), url.end()) == ".php") {
+		std::string result = sys::runcmd("php " + url + " 2>&1", "r");
+		return json::object("response", {
+			arg.request,
+			json::string("version", "HTTP/1.1"),
+			json::number("status", HttpStatus_OK),
+			json::array("header", {
+				json::string("Content-Encoding", "identity"),
+				json::string("Content-Type", "text/html")
+			}),
+			json::string("data", result, false)
+		});
+	}
+*/
 	file f(url);
 	if(f.open("rb+")) {
 		size_t size = f.size();
@@ -530,15 +544,17 @@ export json getUserData(PluginArg arg){
 	std::string cookie = arg.request["header"]["cookie"].toStr();
 	std::string sid = "", username = "", password = "";
 
-	for(std::string str : split(std::string(url.begin() + 10, url.end()), '&')){
-		if(str.find("username=") == 0 && str.length() > 9){
-			username = std::string(str.begin() + 9, str.end());
-		}
-		else if(str.find("password=") == 0 && str.length() > 9){
-			password = std::string(str.begin() + 9, str.end());
-		}
-		else if(str.find("sid=") == 0 && str.length() > 4){
-			sid = std::string(str.begin() + 4, str.end());
+	if(url.size() > 10) {
+		for(std::string str : split(std::string(url.begin() + 10, url.end()), '&')){
+			if(str.find("username=") == 0 && str.length() > 9){
+				username = std::string(str.begin() + 9, str.end());
+			}
+			else if(str.find("password=") == 0 && str.length() > 9){
+				password = std::string(str.begin() + 9, str.end());
+			}
+			else if(str.find("sid=") == 0 && str.length() > 4){
+				sid = std::string(str.begin() + 4, str.end());
+			}
 		}
 	}
 	if(!sid.length() && cookie.find("sid=") == 0 && cookie.length() > 4){
@@ -546,11 +562,21 @@ export json getUserData(PluginArg arg){
 	}
 	json data;
 	int status;
-	if(isUserValid(username, password) || isSessionValid(sid)){
-		std::vector<std::array<sqlite::variant, 2>> result = db->exec<2>("select email, sid != \'\' as session from users where name == ?1 or sid == ?2", {username, sid});
+	if(isUserValid(username, password)){
+		std::vector<std::array<sqlite::variant, 3>> result = db->exec<3>("select username, email, sid != \'\' as session from users where name == ?1", {username});
 		data = json::object("", {
-			json::string("email", std::get<std::string>(result[0][0])),
-			json::boolean("session", std::get<int>(result[0][1]))
+			json::string("username", std::get<std::string>(result[0][0])),
+			json::string("email", std::get<std::string>(result[0][1])),
+			json::boolean("session", std::get<int>(result[0][2]))
+		});
+		status = HttpStatus_OK;
+	}
+	else if(isSessionValid(sid)) {
+		std::vector<std::array<sqlite::variant, 3>> result = db->exec<3>("select username, email, sid != \'\' as session from users where sid == ?1", {sid});
+		data = json::object("", {
+			json::string("username", std::get<std::string>(result[0][0])),
+			json::string("email", std::get<std::string>(result[0][1])),
+			json::boolean("session", std::get<int>(result[0][2]))
 		});
 		status = HttpStatus_OK;
 	}
@@ -701,24 +727,24 @@ structure["sqlite_sequence"] = R"(CREATE TABLE sqlite_sequence(name,seq))";
 
 void __attribute__((constructor)) initPlugin(){
 	pluginlog = new logfile("./log_plugin.txt");
-	contentTypes = new std::map<std::string, std::string>();
-	(*contentTypes)["aac"] = "audio/aac";
-	(*contentTypes)["htm"] = "text/html";
-	(*contentTypes)["html"] = "text/html";
-	(*contentTypes)["jpeg"] = "image/jpeg";
-	(*contentTypes)["jpg"] = "image/jpeg";
-	(*contentTypes)["js"] = "text/javascript";
-	(*contentTypes)["json"] = "application/json";
-	(*contentTypes)["png"] = "image/png";
-	(*contentTypes)["svg"] = "image/svg+xml";
-	(*contentTypes)["txt"] = "text/plain";
-	(*contentTypes)["xml"] = "text/xml";
+	contentTypes = std::map<std::string, std::string>();
+	contentTypes["aac"] = "audio/aac";
+	contentTypes["css"] = "text/css";
+	contentTypes["htm"] = "text/html";
+	contentTypes["html"] = "text/html";
+	contentTypes["jpeg"] = "image/jpeg";
+	contentTypes["jpg"] = "image/jpeg";
+	contentTypes["js"] = "text/javascript";
+	contentTypes["json"] = "application/json";
+	contentTypes["png"] = "image/png";
+	contentTypes["svg"] = "image/svg+xml";
+	contentTypes["txt"] = "text/plain";
+	contentTypes["xml"] = "text/xml";
 	initdb();
 	log(*pluginlog, "plugin \"comment sense\" initialized");
 }
 
 void __attribute__((destructor)) deinitPlugin() {
 	delete pluginlog;
-	delete contentTypes;
 	delete db;
 }

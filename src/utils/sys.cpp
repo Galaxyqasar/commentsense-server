@@ -126,7 +126,7 @@ namespace sys {
 	}
 #endif
 
-	std::string getTimeStr(){
+	std::string getTimeStr() {
 		time_t rawtime;
 		std::string result(128, '\0');
 
@@ -135,5 +135,25 @@ namespace sys {
 
 		strftime(&result[0], result.length(), "%d.%m.%Y %H:%M:%S", timeinfo);
 		return result.c_str();
+	}
+
+	std::string runcmd(std::string cmd, std::string mode, std::string args) {
+		FILE *p = popen(cmd.c_str(), mode.c_str());
+		std::string result;
+		if(p) {
+			if(mode[0] == 'w') {
+				fwrite(args.c_str(), args.size(), 1, p);
+			}
+			else {
+				char buffer[256];
+				while (!feof(p)) {
+					if (fgets(&buffer[0], 256, p) != NULL) {
+						result.append(&buffer[0]);
+					}
+				}
+			}
+			pclose(p);
+		}
+		return result;
 	}
 }
