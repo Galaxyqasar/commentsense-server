@@ -557,26 +557,30 @@ export json getUserData(PluginArg arg){
 			}
 		}
 	}
-	if(!sid.length() && cookie.find("sid=") == 0 && cookie.length() > 4){
+	std::cout<<cookie<<"\n";
+	if(sid.length() != 64 && cookie.find("sid=") == 0 && cookie.length() > 4){
 		sid = split(std::string(cookie.begin() + 4, cookie.end()), ';')[0];
 	}
+	std::cout<<sid<<"\n";
 	json data;
 	int status;
-	if(isUserValid(username, password)){
-		std::vector<std::array<sqlite::variant, 3>> result = db->exec<3>("select username, email, sid != \'\' as session from users where name == ?1", {username});
-		data = json::object("", {
-			json::string("username", std::get<std::string>(result[0][0])),
-			json::string("email", std::get<std::string>(result[0][1])),
-			json::boolean("session", std::get<int>(result[0][2]))
-		});
-		status = HttpStatus_OK;
+	if(isSessionValid(sid)) {
+		std::vector<std::array<sqlite::variant, 2>> result = db->exec<2>("select name, email from users where sid = ?1", {sid});
+		if(result.size()) {
+			data = json::object("", {
+				json::string("username", std::get<std::string>(result[0][0])),
+				json::string("email", std::get<std::string>(result[0][1])),
+				json::boolean("session", true)
+			});
+			status = HttpStatus_OK;
+		}
 	}
-	else if(isSessionValid(sid)) {
-		std::vector<std::array<sqlite::variant, 3>> result = db->exec<3>("select username, email, sid != \'\' as session from users where sid == ?1", {sid});
+	else if(isUserValid(username, password)){
+		std::vector<std::array<sqlite::variant, 3>> result = db->exec<3>("select name, email, length(sid) = 1 as session from users where name = ?1", {username});
 		data = json::object("", {
 			json::string("username", std::get<std::string>(result[0][0])),
 			json::string("email", std::get<std::string>(result[0][1])),
-			json::boolean("session", std::get<int>(result[0][2]))
+			json::boolean("session", !bool(std::get<int>(result[0][2])))
 		});
 		status = HttpStatus_OK;
 	}
