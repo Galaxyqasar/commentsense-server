@@ -558,7 +558,7 @@ export json getUserData(PluginArg arg){
 		}
 	}
 	size_t sidpos = cookie.find("sid=");
-	if(sid.length() != 64 && sidpos < std::string::npos && cookie.length() > csidpos + 4){
+	if(sid.length() != 64 && sidpos < std::string::npos && cookie.length() > sidpos + 4){
 		sid = split(std::string(cookie.begin() + sidpos + 4, cookie.end()), ';')[0];
 	}
 	json data;
