@@ -5,6 +5,7 @@
 #define export extern "C" __attribute__((visibility ("default")))
 
 const size_t max_chunk_size = 50*1024*1024;	//50 Mb
+
 hidden sqlite::database *db = nullptr;
 hidden logfile *pluginlog = nullptr;
 hidden std::map<std::string, std::string> contentTypes;
