@@ -557,11 +557,10 @@ export json getUserData(PluginArg arg){
 			}
 		}
 	}
-	std::cout<<cookie<<"\n";
-	if(sid.length() != 64 && cookie.find("sid=") == 0 && cookie.length() > 4){
-		sid = split(std::string(cookie.begin() + 4, cookie.end()), ';')[0];
+	size_t sidpos = cookie.find("sid=");
+	if(sid.length() != 64 && sidpos < std::string::npos && cookie.length() > csidpos + 4){
+		sid = split(std::string(cookie.begin() + sidpos + 4, cookie.end()), ';')[0];
 	}
-	std::cout<<sid<<"\n";
 	json data;
 	int status;
 	if(isSessionValid(sid)) {
