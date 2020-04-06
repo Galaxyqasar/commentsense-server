@@ -99,9 +99,8 @@ if "-c" in args or "--clean" in args:
 		rmtree('build')
 	exit(0)
 
-if(os.path.isdir("build")):
-	rmtree('build')
-os.mkdir("build")
+if not os.path.isdir("build"):
+	os.mkdir("build")
 
 for file in src(modules):
 	compileLib(file, rebuild, options)

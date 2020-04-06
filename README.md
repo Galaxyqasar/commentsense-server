@@ -5,7 +5,7 @@
 ## dependencies:
 - [sqlite3](https://www.sqlite.org/index.html)
 - [tlse](https://github.com/eduardsui/tlse)
-- [stb_image](https://github.com/nothings/stb)
+- [libtomcrypt](https://github.com/libtom/libtomcrypt)
 
 ## api:
 
@@ -24,8 +24,8 @@
 		- else:
 			- status-code 200, payload == file-content
 	- examples:
-		- "GET /index.html ..."
-		- "GET /res/icon.png ..."
+		- "/index.html"
+		- "/res/icon.png"
 
 
 - get comments:
@@ -47,10 +47,10 @@
 		- the given url (site='url') is the start of the url the comment needs to have
 		- if a username is specified the "voted" flag of the comments in the response is set to true if the user has upvoted that comment
 	- examples:
-		- "GET /api/comments ..."
-		- "GET /api/comments?count=5&site='stackoverflow.com' ..."
-		- "GET /api/comments?username='admin'&site='google.com' ..."
-		- "GET /api/comments?username='admin'&site='google.com'&count=10 ..."
+		- "/api/comments ..."
+		- "/api/comments?count=5&site=stackoverflow.com"
+		- "/api/comments?username=admin&site=google.com"
+		- "/api/comments?username=admin&site=google.com&count=10"
 
 
 - get top sites:
@@ -67,9 +67,9 @@
 	- description:
 		- returns the n most commented sites, ordered by the number of comments
 	- examples:
-		- "GET /api/sites ..."	// get the 5 most commented sites
-		- "GET /api/sites?count=10 ..."	// get the 10 most commented sites
-		- "GET /api/sites?url=github.com/% ..."	// get all sites that start with "github.com/"
+		- "/api/sites"	// get the 5 most commented sites
+		- "/api/sites?count=10"	// get the 10 most commented sites
+		- "/api/sites?url=github.com/%"	// get all sites that start with "github.com/"
 
 
 - post comment:
@@ -81,12 +81,14 @@
 			- either username and password or the sid needs to be given
 			- the sid can also be sent as a cookie
 				-> username, password and sid are optional in the json, when the sid is set as a cookie
-				-> if the sid is set as a cookie it overrides the sid in the json
+				-> if the sid is set as a cookie it overwrites the sid in the json
 			- if both are given, both are checked and if any of them is valid the comment is posted
 	- response:
 		- format: json
-		- data: `{"status":"error: (wrong username or password) or (sid invalid)"}`
-		- possible status-codes: 200, 500, 403
+		- data: [ `{"status":"error: (wrong username or password) or (sid invalid)"}`
+				 | `{"status":"error: sql error"}`
+				 | `{"status":"success: comment posted"}`]
+		- possible status-codes: 403, 500, 200
 	- description:
 		- post a comment with headline, content, url
 		- only works if if username and password or the sid is valid
@@ -144,7 +146,7 @@
 		- the sid is also set as a cookie, which gets stored by the browser until it is closed
 		- if it needs to be stored longer you can extract the sid from the json in the response
 	- examples:
-		- "GET /api/signin?username='my username'&password='my password' ..."
+		- "/api/signin?username=my username&password=my password"
 
 
 - check sid:
@@ -157,8 +159,8 @@
 	- description:
 		- checks if the sid is still valid (is currently active and jounger than 24 hours)
 	- examples:
-		- "GET /api/checksid ..." // requires the sid to be set as a cookie
-		- "GET /api/checksid?sid='1a2b3c4d5e6f789' ..."
+		- "/api/checksid ..." // requires the sid to be set as a cookie
+		- "/api/checksid?sid=1a2b3c4d5e6f789"
 
 
 - signout:
@@ -172,9 +174,9 @@
 	- description:
 		- removes the current active sid from the user
 		- examples:
-			- "GET /api/signout ..." // requires the sid to be set as a cookie
-			- "GET /api/signout?username='my username' ..."
-			- "GET /api/signout?sid='1a2b3c4d5e6f789' ..."
+			- "/api/signout ..." // requires the sid to be set as a cookie
+			- "/api/signout?username=my username"
+			- "/api/signout?sid=1a2b3c4d5e6f789"
 
 
 - get user data:
@@ -190,9 +192,9 @@
 	- description:
 		- returns some account informations
 		- examples:
-			- "GET /api/user ..." // requires the sid to be set as a cookie
-			- "GET /api/user?username='my username'&password='my password' ..."
-			- "GET /api/user?sid='1a2b3c4d5e6f789' ..."
+			- "/api/user ..." // requires the sid to be set as a cookie
+			- "/api/user?username=my username&password=my password"
+			- "/api/user?sid=1a2b3c4d5e6f789"
 
 
 - set user data:
