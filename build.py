@@ -122,6 +122,8 @@ if(os.path.isdir("www")):
 	copyfile("README.md", "build/www/README.md")
 else:
 	os.mkdir("build/www")
+	copytree("www", "build/www")
+	copyfile("README.md", "build/www/README.md")
 
 if "-e" in args:
 	subprocess.run(["sudo", "./server"], cwd="./build")
