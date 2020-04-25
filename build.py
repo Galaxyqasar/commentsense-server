@@ -117,13 +117,11 @@ linkDll("./obj/server.o", "./build/server" + libext)
 copyfile("plugins.json", "build/plugins.json")
 copyfile("init.sql", "build/init.sql")
 
-if(os.path.isdir("www")):
-	copytree("www", "build/www")
-	copyfile("README.md", "build/www/README.md")
-else:
+if(not os.path.isdir("www")):
 	os.mkdir("build/www")
-	copytree("www", "build/www")
-	copyfile("README.md", "build/www/README.md")
+
+copytree("www", "build/www")
+copyfile("README.md", "build/www/README.md")
 
 if "-e" in args:
 	subprocess.run(["sudo", "./server"], cwd="./build")
