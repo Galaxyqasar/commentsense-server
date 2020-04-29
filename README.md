@@ -62,7 +62,6 @@
 		- url: limit sites to the ones that match this url (basic sql pattern matching)
 			- default: any
 	- response:
-		- format: json
 		- possible status-codes: 200
 	- description:
 		- returns the n most commented sites, ordered by the number of comments
@@ -84,10 +83,6 @@
 				-> if the sid is set as a cookie it overwrites the sid in the json
 			- if both are given, both are checked and if any of them is valid the comment is posted
 	- response:
-		- format: json
-		- data: [ `{"status":"error: (wrong username or password) or (sid invalid)"}`
-				 | `{"status":"error: sql error"}`
-				 | `{"status":"success: comment posted"}`]
 		- possible status-codes: 403, 500, 200
 	- description:
 		- post a comment with headline, content, url
@@ -106,9 +101,7 @@
 				-> if the sid is set as a cookie it overrides the sid in the json
 			- if both are given, both are checked and if any of them is valid the comment is voted / unvoted
 	- response:
-		- format: json
-		- data: `{"status":"error: already voted"}`
-		- possible status-codes: 200, 400, 403, 500
+		- possible status-codes: 200, 400, 401, 404, 409, 500
 	- description:
 		- vote / unvote a comment
 		- if "vote" is set to true the comment with the matching id will be upvoted
@@ -123,8 +116,6 @@
 		- data: `{"username":"my name", "password":"my password", "email":"my_email@sample.com"}`
 			- email is optional
 	- response:
-		- format: json
-		- data: `{"status":"signup succsessfull"}`
 		- possible status-codes: 200, 403, 500
 	- description:
 		- create an account with specified username, password and email if the username is not already used
@@ -202,7 +193,6 @@
 	- suburl: "/api/user"
 	- response:
 		- possible status-codes: 200, 401
-		- json with status
 	- payload:
 		- json: `{"username":"my username", "password":"my password", "email":"new email (optional)", "new-password":"my new password (optional)"}`
 	- description:
