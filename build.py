@@ -2,6 +2,7 @@ import os
 import sys
 import platform
 import subprocess
+from shutil import copyfile, copytree
 
 myEnv = os.environ.copy()
 system = platform.system()
@@ -102,3 +103,11 @@ if not os.path.isfile("build/server.o") or os.path.getmtime("server.cpp") > os.p
 if not os.path.isfile("build/plugin.o") or os.path.getmtime("plugin.cpp") > os.path.getmtime("build/plugin.o") or os.path.getmtime("plugin.hpp") > os.path.getmtime("build/plugin.o"):
 	gpp(["plugin.cpp", "-c", "-o", "build/plugin.o", "-Iinclude", "-fpic"] + options)
 	linkdll("build/plugin.o", "build/plugin.so", "./plugin.so", ["build/yeet.so", "build/server.so"])
+
+
+copyfile("plugins.json", "build/plugins.json")
+copyfile("init.sql", "build/init.sql")
+
+if(os.path.isdir("www") and not os.path.isdir("build/www")):
+	copytree("www", "build/www")
+	copyfile("README.md", "build/www/README.md")
