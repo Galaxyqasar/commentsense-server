@@ -101,16 +101,15 @@ void Server::handleClient(tcpsocket *client){
 			try {
 				response = responseToString(p.callback(request, this, client));
 			}
-			catch (std::bad_variant_access &e) {
-				spdlog::error("bad_variant_access exception thrown in plugin {} : {}", p.name, e.what());
+			catch (std::exception &e) {
+				spdlog::error("exception thrown in plugin {} : {}", p.name, e.what());
 				response = responseToString(json::object{
 					{"request", request},
 					{"version", "HTTP/1.1"},
 					{"status", HttpStatus_InternalServerError},
 					{"header", json::object{
 						{"Content-Type", "application/json"}
-					}},
-					{"data", json(json::object{{"status", "error: internal error"}}).toString()}
+					}}
 				});
 			}
 			break;
@@ -129,12 +128,12 @@ void Server::handleClient(tcpsocket *client){
 std::string Server::responseToString(json response, bool payload){
 	if(response.isNull())
 		return "";
-	std::string version = response["version"].toString();
-	std::string status = HttpStatusReasonPhrase(response["status"].toNumber());
-	std::string data = response["data"].toString();
-	json header = response["header"];
 	std::stringstream result;
-	result<<version<<" "<<int(response["status"].toNumber())<<" "<<status<<"\n";
+	result<<response["version"].toString()<<" ";
+	result<<int(response["status"].toNumber())<<" ";
+	result<<HttpStatusReasonPhrase(response["status"].isNumber() ? response["status"].toNumber() : 500)<<"\n";
+
+	json header = response["header"].isObject() ? response["header"] : json::object{};
 	for(auto & [key, val] : header.toObject()){
 		result<<key<<": "<<val.toString()<<"\n";
 	}
@@ -146,6 +145,8 @@ std::string Server::responseToString(json response, bool payload){
 		result<<"Access-Control-Allow-Credentials: true\n";
 	}
 	result<<"Connection: close\n";
+	
+	std::string data = response["data"].isString() ? response["data"].toString() : "";
 	if(data.size() > 0 && payload){
 		result<<"Content-Length: "<<data.size()<<"\n";
 		result<<"\n";

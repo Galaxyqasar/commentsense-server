@@ -405,7 +405,7 @@ export json signin(json request, Server*, tcpsocket*){
 export json checksid(json request, Server*, tcpsocket*){
 	std::string sid = request["parameters"]["sid"].isString() ? request["parameters"]["sid"].toString() :
 						(request["cookies"]["sid"].isString() ? request["cookies"]["sid"].toString() : "");
-	spdlog::info("checksid(sid: \'{}\'", sid);
+	spdlog::info("checksid(sid: \'{}\')", sid);
 	return json::object{
 		{"request", request},
 		{"version", "HTTP/1.1"},
