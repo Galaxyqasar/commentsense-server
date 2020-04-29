@@ -1,4 +1,4 @@
-#include "sha.hpp"
+#include <crypt/sha.hpp>
 
 namespace crypt{
 	sha256::sha256(){
@@ -116,20 +116,14 @@ namespace crypt{
 		state[7] += h;
 	}
 
-	std::string sha256::hashFile(std::string fileName){
+	std::string sha256::hashFile(std::string filename){
 		sha256 hash;
-		utils::file f(fileName);
-		f.open("rb");
-		size_t size = f.size();
-		size_t hashed = 0;
-		while(hashed < size){
-			size_t missing = size - hashed;
-			size_t s = (missing < 1024*1024) ? missing : 1024*1024;
-			std::string data = f.read(s);
+		std::ifstream file(filename);
+		while(!file.eof()){
+			std::string data(1024, '\0');
+            file.read(&data[0], 1024);
 			hash.update(data);
-			hashed += s;
 		}
-		f.close();
 		return hash.final();
 	}
 	

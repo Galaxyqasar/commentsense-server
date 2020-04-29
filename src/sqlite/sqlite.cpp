@@ -1,26 +1,20 @@
-#include "sqlite.hpp"
+#include <sqlite/sqlite.hpp>
 
 namespace sqlite{
-	utils::logfile *sqlitelog;
 	void __attribute__((constructor)) initSqlite(){
 		sqlite3_initialize();
-		sqlitelog = new utils::logfile("./log_sqlite.txt");
-	}
-	
-	utils::logfile* getSqliteLog(){
-		return sqlitelog;
 	}
 
 	stmt::stmt(std::string querry, database *db, std::vector<variant> values){
-		log(*sqlitelog, "sqlite::stmt(\"", querry, "\", ", values.size(), ")");
 		this->db = db->handle;
 		if(sqlite3_prepare_v2(this->db, querry.c_str(), -1, &handle, nullptr) == SQLITE_OK){
 			setArgs(values);
 		}
-		else{
-			log(*sqlitelog, "    error: couldn't prepare statement");
-			std::string error = sqlite3_errmsg(this->db);
-			log(*sqlitelog, "    error: \"", error, "\"");
+		else if(sqlite3_errcode(this->db) == SQLITE_ERROR) {
+			spdlog::error("sqlite3 error: {}", sqlite3_errmsg(this->db));
+		}
+		else if(sqlite3_errcode(this->db) == SQLITE_WARNING) {
+			spdlog::warn("sqlite3 warning: {}", sqlite3_errmsg(this->db));
 		}
 	}
 	stmt::~stmt(){
@@ -49,13 +43,14 @@ namespace sqlite{
 				} break;
 			}
 			if(r != SQLITE_OK){
-				log(*sqlitelog, "    error(", r, ") in binding var ", i, ": \"", sqlite3_errmsg(this->db), "\"");
 			}
 			i++;
 		}
-		std::string error = sqlite3_errmsg(this->db);
-		if(error != "not an error" && error != "another row available" && error != "column index out of range"){
-			log(*sqlitelog, "    error: \"", error, "\"");
+		if(sqlite3_errcode(this->db) == SQLITE_ERROR) {
+			spdlog::error("sqlite3 error: {}", sqlite3_errmsg(this->db));
+		}
+		else if(sqlite3_errcode(this->db) == SQLITE_WARNING) {
+			spdlog::warn("sqlite3 warning: {}", sqlite3_errmsg(this->db));
 		}
 	}
 

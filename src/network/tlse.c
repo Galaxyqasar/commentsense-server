@@ -1,5 +1,7 @@
+#define TLS_AMALGAMATION
+
 /********************************************************************************
- Copyright (c) 2016-2019, Eduard Suica
+ Copyright (c) 2016-2020, Eduard Suica
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without modification,
@@ -47,7 +49,11 @@
 #include <errno.h>
 #endif
 
-#include "../crypt/libtomcrypt.h"
+#ifdef TLS_AMALGAMATION
+#include "libtomcrypt.h"
+#else
+#include <tomcrypt/tomcrypt.h>
+#endif
 
 #if (CRYPT <= 0x0117)
     #define LTC_PKCS_1_EMSA LTC_LTC_PKCS_1_EMSA
@@ -65,7 +71,7 @@
     #include "ktls.h"
 #endif
 
-#include "tlse.h"
+#include <network/tlse.h>
 #ifdef TLS_CURVE25519
     #include "curve25519.c"
 #endif
@@ -3233,7 +3239,7 @@ int tls_certificate_is_valid(struct TLSCertificate *cert) {
     if (!cert->not_after)
         return certificate_unknown;
     //20160224182300Z//
-    char current_time[32]; //16
+    char current_time[16];
     time_t t = time(NULL);
     struct tm *utct = gmtime(&t);
     if (utct) {
@@ -3993,6 +3999,9 @@ int tls_packet_uint24(struct TLSPacket *packet, unsigned int i) {
 }
 
 int tls_random(unsigned char *key, int len) {
+#ifdef TLS_USE_RANDOM_SOURCE
+    TLS_USE_RANDOM_SOURCE(key, len);
+#else
 #ifdef __APPLE__
     for (int i = 0; i < len; i++) {
         unsigned int v = arc4random() % 0x100;
@@ -4017,6 +4026,7 @@ int tls_random(unsigned char *key, int len) {
         if (key_len == len)
             return 1;
     }
+#endif
 #endif
 #endif
     return 0;
@@ -6166,7 +6176,7 @@ int _private_tls_parse_key_share(struct TLSContext *context, const unsigned char
     const unsigned char *buffer = NULL;
     unsigned char *out2;
     unsigned long out_size;
-    unsigned short key_size;
+    unsigned short key_size = 0;
     while (buf_len >= 4) {
         unsigned short named_group = ntohs(*(unsigned short *)&buf[i]);
         i += 2;

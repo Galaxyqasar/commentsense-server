@@ -1,4 +1,4 @@
-#include "dll.hpp"
+#include <utils/dll.hpp>
 
 namespace utils{
 	dll::dll(std::string name){
@@ -7,16 +7,7 @@ namespace utils{
 			open(name);
 		}
 	}
-	dll::dll(const dll& other){
-		handle = other.handle;
-		m_name = other.m_name;
-	}
 	dll::~dll(){
-	}
-	dll& dll::operator=(const dll& other){
-		handle = other.handle;
-		m_name = other.m_name;
-		return *this;
 	}
 	void dll::open(std::string name){
 		handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);

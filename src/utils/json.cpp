@@ -1,250 +1,219 @@
-#include "json.hpp"
+#include <utils/json.hpp>
 
-namespace utils{
-	json json_err = json::null();
+// parse a string
+//	+ really fast
+//	- entire source needs to be in memory at the same time
+json::json(const char *str, size_t length) {
+	while(::isspace(*str)) str++, length--;		//"remove" whitespaces from begin
+	while(::isspace(str[length-1])) length--;	// and end
+	this->val = std::monostate();
+	if(!length)
+		return;
+	switch(str[0]) {
+		case '{': {	//start of an object
+			if(str[length-1] == '}') {
+				str++, length--;
+				val = json::object();
+				for(size_t i = 0; i < length; i++) {
+					switch(str[i]) {
+						case '{': {
+							int depth = 1;
+							while(depth > 0){
+								if(str[++i] == '}'){
+									depth--;
+								}
+								else if(str[i] == '{'){
+									depth++;
+								}
+							}
+						} break;
+						case '[': {
+							int depth = 1;
+							while(depth > 0){
+								if(str[++i] == ']'){
+									depth--;
+								}
+								else if(str[i] == '['){
+									depth++;
+								}
+							}
+						} break;
+						case '"': {
+							while(str[++i] != '\"'){
+								if(str[i] == '\\'){
+									i++;
+								}
+							}
+						} break;
+						case '}':
+						case ',': {
+							if(i) {
+								const char *key = str;
+								size_t keylen = 0;
+								while(key[keylen] != ':') keylen++;
+								const char *val = key + keylen + 1;
+								size_t vallen = i - (val - key);
 
-	inline void indent(std::stringstream &result, int amnt){
-		for(int i = 0; i < amnt; i++)
-			result<<"    ";
-	}
+								while(::isspace(*key)) key++, keylen--;
+								while(::isspace(key[keylen-1])) keylen--;
 
-	json::json(std::string name, int type, double num, std::string str, std::vector<json> elements){
-		this->m_name = name;
-		this->type = type;
-		this->num = num;
-		this->str = str;
-		this->elements = elements;
-	}
-	json::json(const json &other){
-		m_name = other.m_name;
-		type = other.type;
-		num = other.num;
-		str = other.str;
-		elements = other.elements;
-	}
-	json::json(){
-		this->operator=(json::null());
-	}
-
-	json& json::operator=(const json& other){
-		m_name = other.m_name;
-		type = other.type;
-		num = other.num;
-		str = other.str;
-		elements = other.elements;
-		return *this;
-	}
-
-	json& json::operator[](std::string key){
-		if(type == object_t){
-			for(json &e : elements){
-				if(e.m_name == key){
-					return e;
-				}
-			}
-			return json_err;
-		}
-		else{
-			return json_err;
-		}
-	}
-	json& json::operator[](int index){
-		if(type == array_t){
-			return elements[index];
-		}
-		else{
-			return json_err;
-		}
-	}
-	json& json::operator+=(json element){
-		if(type == array_t || type == object_t){
-			elements.push_back(element);
-		}
-		return *this;
-	}
-
-	json json::null(std::string name){
-		return json(name, null_t, 0, "", {});
-	}
-	json json::object(std::string name, std::vector<json> elements){
-		return json(name, object_t, 0, "", elements);
-	}
-	json json::array(std::string name, std::vector<json> elements){
-		return json(name, array_t, 0, "", elements);
-	}
-	json json::string(std::string name, std::string value, bool deflate){
-		return json(name, string_t, 0, deflate ? utils::deflate(value) : value, {});
-	}
-	json json::number(std::string name, double value){
-		return json(name, number_t, value, "", {});
-	}
-	json json::boolean(std::string name, bool value){
-		return json(name, boolean_t, (int)value, "", {});
-	}
-
-	std::string& json::valueStr(){
-		return str;
-	}
-	double& json::valueNum(){
-		return num;
-	}
-	std::vector<json> json::valueList(){
-		return elements;
-	}
-
-	int json::toInt(){
-		if(type == number_t)
-			return num;
-		else if(type == string_t)
-			return std::atoi(str.c_str());
-		else if(type == boolean_t)
-			return int(num);
-		return -1;
-	}
-
-	std::string json::toStr(){
-		if(type == string_t)
-			return str;
-		else if(type == number_t)
-			return std::to_string(num);
-		return print(minified);
-	}
-
-	std::string& json::name(){
-		return m_name;
-	}
-
-	std::vector<json>::iterator json::begin(){
-		return elements.begin();
-	}
-	std::vector<json>::iterator json::end(){
-		return elements.end();
-	}
-
-	std::string json::print(int offset){
-		std::stringstream result;
-		std::string nl = (offset >= 0 ? "\n" : "");
-		indent(result, offset);
-		if(m_name != "")
-			result<<"\""<<m_name.c_str()<<"\":";
-		if(type == object_t){
-			char separator = '{';
-			for(json &e : elements){
-				result<<separator<<nl<<e.print(offset + 1);
-				separator = ',';
-			}
-			if(elements.size() == 0)
-				result<<"{";
-			result<<nl;
-			indent(result, offset);
-			result<<"}";
-		}
-		else if(type == array_t){
-			char separator = '[';
-			for(json &e : elements){
-				result<<separator<<nl<<e.print(offset + 1);
-				separator = ',';
-			}
-			if(elements.size() == 0)
-				result<<"[";
-			result<<nl;
-			indent(result, offset);
-			result<<"]";
-		}
-		else if(type == string_t)
-			result<<"\""<<utils::inflate(str)<<"\"";
-		else if(type == number_t)
-			result<<num;
-		else if(type == boolean_t)
-			result<<(num == 1 ? "true" : "false");
-		else if(type == null_t)
-			result<<"null";
-		return result.str();
-	}
-
-	json json::parse(std::string source){
-		//get name of current object
-		while(::isspace(source[0])){
-			source.erase(0, 1);
-		}
-		while(::isspace(source.back()) || source.back() == '\0'){
-			source.pop_back();
-		}
-		std::string m_name = "";
-		size_t begin, end;
-		begin = source.find('\"');
-		end = source.find('\"', begin + 1);
-		if(begin == 0 && end > begin && end != std::string::npos){
-			m_name = std::string(source.begin() + begin + 1, source.begin() + end);
-			if(source.length() >= 2 && m_name == std::string(source.begin() + 1, source.end() - 1)){
-				return json::string("", m_name);
-			}
-			source.erase(begin, end + 2);
-			while(::isspace(source[0])){
-				source.erase(0, 1);
-			}
-		}
-		//get value
-		if((source.front() == '{' && source.back() == '}') || (source.front() == '[' && source.back() == ']')){	//I'm an object or an array
-			std::vector<json> elements;
-			char c = 0;
-			size_t begin = 1;
-			for(unsigned i = 1; i < source.length()-1; i++){
-				c = source[i];
-				//skip sub elements
-				if(c == '{'){
-					int depth = 1;
-					while(depth > 0){
-						if(source[++i] == '}')
-							depth--;
-						else if(source[i] == '{')
-							depth++;
+								std::get<json::object>(this->val)[std::string(key+1, keylen-2)] = json(val, vallen);
+								key = nullptr;
+								keylen = 0;
+								length -= i + 1;
+								str += i + 1;
+								i = -1;
+							}
+						} break;
 					}
 				}
-				else if(c == '['){
-					int depth = 1;
-					while(depth > 0){
-						if(source[++i] == ']')
-							depth--;
-						else if(source[i] == '[')
-							depth++;
-					}
-				}
-				else if(c == '\"'){
-					while(source[++i] != '\"'){
-						if(source[i] == '\\')
-							i++;
-					}
-				}
+			}
+		} break;
+		case '[': {	//start of an array
+			if(str[length-1] == ']') {
+				str++, length--;
+				this->val = json::array();
+				for(size_t i = 0; i < length; i++) {
+					switch(str[i]) {
+						case '{': {
+							int depth = 1;
+							while(depth > 0){
+								if(str[++i] == '}'){
+									depth--;
+								}
+								else if(str[i] == '{'){
+									depth++;
+								}
+							}
+						} break;
+						case '[': {
+							int depth = 1;
+							while(depth > 0){
+								if(str[++i] == ']'){
+									depth--;
+								}
+								else if(str[i] == '['){
+									depth++;
+								}
+							}
+						} break;
+						case '"': {
+							while(str[++i] != '\"'){
+								if(str[i] == '\\'){
+									i++;
+								}
+							}
+						} break;
+						case ']':
+						case ',': {
+							if(i) {
+								const char *val = str;
+								size_t vallen = i;
 
-				if(c == ','){	//end of current element
-					std::string childsource(source.begin() + begin, source.begin() + i);
-					elements.push_back(json::parse(childsource));
-					begin = i + 1;
+								while(::isspace(*val)) val++, vallen--;
+								while(::isspace(val[vallen-1])) vallen--;
+
+								std::get<json::array>(this->val).push_back(json(val, vallen));
+								length -= i + 1;
+								str += i + 1;
+								i = -1;
+							}
+						} break;
+					}
 				}
 			}
-			std::string childsource(source.begin() + begin, source.end() - 1);
-			if(childsource != "")
-				elements.push_back(json::parse(childsource));
-			if(source.front() == '{')
-				return object(m_name, elements);
-			else
-				return array(m_name, elements);
-		}
-		else if(source != ""){//I'm a string or number
-			if(source.front() == '\"' && source.back() == '\"'){	//I'm a string
-				return json::string(m_name, std::string(source.begin() + 1, source.end() - 1));
+		} break;
+		case '"': {	//start of an string
+			if(length >= 2) {
+				this->val = deflate(std::string(str+1, length-2));
 			}
-			else{ //I'm a number or bool
-				if(source == "true")
-					return boolean(m_name, true);
-				if(source == "false")
-					return boolean(m_name, false);
-				return number(m_name, atof(source.c_str()));
+		} break;
+		default: {
+			if(strncmp(str, "true", 4) == 0) {
+				this->val = true;
 			}
-		}
-		else{
-			return null();
+			else if(strncmp(str, "false", 5) == 0) {
+				this->val = true;
+			}
+			else if(strncmp(str, "null", 4) == 0) {
+				this->val = std::monostate();
+			}
+			else {
+				this->val = strtod(str, NULL);
+			}
 		}
 	}
+}
+
+json& json::operator[](std::string key) {
+	static json error;
+	error = json();
+	if(isObject()) {
+		return std::get<object>(val)[key];
+	}
+	return error;
+}
+json& json::operator[](size_t index) {
+	static json error;
+	error = json();
+	if(isArray() && std::get<array>(val).size() > index) {
+		return std::get<array>(val)[index];
+	}
+	return error;
+}
+
+std::string json::print(size_t offset) {
+	std::stringstream str;
+	print(str, offset);
+	return str.str();
+}
+void json::print(std::ostream &output, int offset) {
+	switch(val.index()) {
+		case 0: {
+			output<<"null";
+		} break;
+		case 1: {
+			output<<std::string("{")<<(offset >= 0 ? "\n" : "");
+			std::string sep, space;
+			for(int i = 0; i < offset; i++) {
+				space += '\t';
+			}
+			for(std::pair<const std::string, json> &c : std::get<json::object>(val)) {
+				output<<sep<<space<<'\"'<<c.first<<"\":";
+				c.second.print(output, offset + (offset > 0));
+				sep = std::string(",") + (offset >= 0 ? "\n" : "");
+			}
+			output<<(offset >= 0 ? "\n" : "")<<space.substr(0,space.length()-1)<<"}";
+		} break;
+		case 2: {
+			output<<'['<<(offset >= 0 ? "\n" : "");
+			std::string sep, space;
+			for(int i = 0; i < offset; i++) {
+				space += '\t';
+			}
+			for(json &j : std::get<std::vector<json>>(val)) {
+				output<<sep<<space;
+				j.print(output, offset + (offset > 0));
+				sep = std::string(",") + (offset >= 0 ? "\n" : "");
+			}
+			output<<(offset >= 0 ? "\n" : "")<<space.substr(0,space.length()-1)<<']';
+		} break;
+		case 3: {
+			output<<'\"'<<inflate(std::get<std::string>(val))<<'\"';
+		} break;
+		case 4: {
+			output<<(std::get<bool>(val) ? "true" : "false");
+		} break;
+		case 5: {
+			output<<std::get<double>(val);
+		} break;
+		default: {
+			output<<"error";
+		}
+	}
+}
+
+std::ostream& operator<<(std::ostream &stream, json& data) {
+	data.print(stream, json::minified);
+	return stream;
 }

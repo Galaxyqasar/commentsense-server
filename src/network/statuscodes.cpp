@@ -1,4 +1,4 @@
-#include "statuscodes.hpp"
+#include <network/statuscodes.hpp>
 
 namespace network{
 	std::string HttpStatusReasonPhrase(int code){

@@ -4,91 +4,78 @@
 		"dll":"./plugin.so",
 		"function":"getStats",
 		"method":"GET",
-		"suburl":"/api/stats",
-		"requirements":["./yeet.so", "./server.so"]
+		"suburl":"/api/stats"
 	},{
 		"name":"get-file",
 		"dll":"./plugin.so",
 		"function":"getFile",
 		"method":"GET",
-		"suburl":"/",
-		"requirements":["./yeet.so", "./server.so"]
+		"suburl":"/"
 	},{
 		"name":"get-comments",
 		"dll":"./plugin.so",
 		"function":"getComments",
 		"method":"GET",
-		"suburl":"/api/comments",
-		"requirements":["./yeet.so"]
+		"suburl":"/api/comments"
 	},{
 		"name":"get-top-sites",
 		"dll":"./plugin.so",
 		"function":"getTopSites",
 		"method":"GET",
-		"suburl":"/api/sites",
-		"requirements":["./yeet.so"]
+		"suburl":"/api/sites"
 	},{
 		"name":"post-comment",
 		"dll":"./plugin.so",
 		"function":"postComment",
 		"method":"POST",
-		"suburl":"/api/comments",
-		"requirements":["./yeet.so"]
+		"suburl":"/api/comments"
 	},{
 		"name":"vote-comment",
 		"dll":"./plugin.so",
 		"function":"voteComment",
 		"method":"PATCH",
-		"suburl":"/api/comments",
-		"requirements":["./yeet.so"]
+		"suburl":"/api/comments"
 	},{
 		"name":"signup",
 		"dll":"./plugin.so",
 		"function":"signup",
 		"method":"POST",
-		"suburl":"/api/signup",
-		"requirements":["./yeet.so"]
+		"suburl":"/api/signup"
 	},{
 		"name":"signin",
 		"dll":"./plugin.so",
 		"function":"signin",
 		"method":"GET",
-		"suburl":"/api/signin",
-		"requirements":["./yeet.so"]
+		"suburl":"/api/signin"
 	},{
 		"name":"check-sid",
 		"dll":"./plugin.so",
 		"function":"checksid",
 		"method":"GET",
-		"suburl":"/api/checksid",
-		"requirements":["./yeet.so"]
+		"suburl":"/api/checksid"
 	},{
 		"name":"signout",
 		"dll":"./plugin.so",
 		"function":"signout",
 		"method":"GET",
-		"suburl":"/api/signout",
-		"requirements":["./yeet.so"]
+		"suburl":"/api/signout"
 	},{
 		"name":"get-user-data",
 		"dll":"./plugin.so",
 		"function":"getUserData",
 		"method":"GET",
-		"suburl":"/api/user",
-		"requirements":["./yeet.so"]
+		"suburl":"/api/user"
 	},{
 		"name":"set-user-data",
 		"dll":"./plugin.so",
 		"function":"changeUserData",
 		"method":"PATCH",
-		"suburl":"/api/user",
-		"requirements":["./yeet.so"]
+		"suburl":"/api/user"
 	},{
 		"name":"options-200",
 		"dll":"./plugin.so",
 		"function":"optionsAlwaysOK",
 		"method":"OPTIONS",
-		"suburl":"/",
-		"requirements":["./yeet.so"]
+		"suburl":"/"
 	}
 ]
