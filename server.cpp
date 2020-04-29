@@ -25,7 +25,13 @@ void Server::start(){
 	socket->listen();
 	while(!quit){
 		tcpsocket *client = socket->accept({5,0});
-		std::thread handler(&Server::handleClient, this, client);
+		std::thread handler([this, &client]() {
+			try {
+				handleClient(client);
+			} catch(std::exception &e) {
+				spdlog::error("exception while handling client: \'{}\'", e.what());
+			}
+		});
 		handler.detach();
 	}
 }
@@ -145,7 +151,7 @@ std::string Server::responseToString(json response, bool payload){
 		result<<"Access-Control-Allow-Credentials: true\n";
 	}
 	result<<"Connection: close\n";
-	
+
 	std::string data = response["data"].isString() ? response["data"].toString() : "";
 	if(data.size() > 0 && payload){
 		result<<"Content-Length: "<<data.size()<<"\n";
