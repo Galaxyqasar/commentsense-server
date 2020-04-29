@@ -545,11 +545,11 @@ structure["sqlite_sequence"] = R"(CREATE TABLE sqlite_sequence(name,seq))";
 			tablecount++;
 		}
 	}
-	if(reinitdb || tablecount != 4) {
+	//if(reinitdb || tablecount != 4) {
 		for(std::string str : split(read("init.sql"), ";")) {
 			db->exec(str);
 		}
-	}
+	//}
 	db->exec("update users set sid = \'\', session = \'\' where name not like \'test\';");
 }
 

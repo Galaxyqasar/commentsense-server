@@ -97,11 +97,11 @@ namespace sqlite{
 		std::vector<std::array<variant, n>> exec(std::string querry, std::vector<variant> values = {}, int *changes = nullptr){
 			stmt s(querry, this, values);
 			std::vector<std::array<variant, n>> result;
-			std::array<variant, n> row;
-			do {
-				row = s.next<n>();
+			std::array<variant, n> row = s.next<n>();
+			while(s.status() != SQLITE_DONE){
 				result.push_back(row);
-			} while(s.status() == SQLITE_ROW);
+				row = s.next<n>();
+			}
 			if(changes)
 				*changes = sqlite3_changes(handle);
 			return result;
@@ -115,10 +115,9 @@ namespace sqlite{
 	template<>
 	std::vector<std::array<variant, 0>> database::exec<0>(std::string querry, std::vector<variant> values, int *changes){
 		stmt s(querry, this, values);
-		while(s.status() != SQLITE_DONE){
+		do {
 			s.next<0>();
-			assert(s.status() != SQLITE_ERROR);
-		}
+		} while(s.status() != SQLITE_DONE);
 		if(changes)
 			*changes = sqlite3_changes(handle);
 		return {};
