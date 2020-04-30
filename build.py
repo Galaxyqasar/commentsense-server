@@ -13,7 +13,7 @@ progs = {"gcc" : "gcc" if system in ["Linux", "Darwin"] else parrent + "/cygwin6
 		 "g++" : "g++" if system in ["Linux", "Darwin"] else parrent + "/cygwin64/bin/g++.exe",
 		 "ld" : "ld" if system in ["Linux", "Darwin"] else parrent + "/cygwin64/bin/ld.exe"}
 
-options = ["-D SPDLOG_COMPILED_LIB"]
+options = ["-D SPDLOG_COMPILED_LIB", "-O0"]
 link = []
 rebuild = False
 

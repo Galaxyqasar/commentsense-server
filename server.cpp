@@ -24,12 +24,15 @@ void Server::start(){
 	socket->listen();
 	while(!quit){
 		tcpsocket *client = socket->accept({5,0});
-		std::thread handler([this, &client]() {
+		std::thread handler([this, client]() {
 			try {
+				spdlog::error("1");
 				handleClient(client);
 			} catch(std::exception &e) {
 				spdlog::error("exception while handling client: \'{}\'", e.what());
 			}
+			spdlog::error("2");
+			delete client;
 		});
 		handler.detach();
 	}
@@ -47,10 +50,10 @@ void Server::stop(){
 void Server::handleClient(tcpsocket *client){
 	json request = json::object{
 		{"origin", client->getClientIP()},
-		{"method", client->recvLine(' ', 8)},
+		{"method", parseMethod(client->recvLine(' ', 8))},
 		{"url", client->recvLine(' ', 2048)},
 		{"version", client->recvLine('\n', 16)},
-		{"header", [client]() -> json::object {
+		{"header", [&client]() -> json::object {
 			json::object headers;
 			std::string line;
 			do {
@@ -63,6 +66,9 @@ void Server::handleClient(tcpsocket *client){
 			return headers;
 		}()}
 	};
+	if(request["version"].toString() != "HTTP/1.1" || request["method"].toInt() == NONE) {
+		return;
+	}
 	std::string url = request["url"].toString();
 	if(url.find('?') < url.length() - 1) {
 		request["url"] = url.substr(0, url.find('?'));
@@ -99,7 +105,7 @@ void Server::handleClient(tcpsocket *client){
 	}
 	spdlog::info("request: {}", request.print(json::minified));
 
-	int method = parseMethod(request["method"].toString());
+	int method = request["method"].toInt();
 	std::string response;
 	for(const Plugin &p : plugins){
 		if((p.method & method) && (request["url"].toString().find(p.suburl) == 0)){	//url starts with p.suburl
@@ -124,10 +130,6 @@ void Server::handleClient(tcpsocket *client){
 	if(response.length()){
 		client->send(response);
 	}
-
-	//disconnect
-	client->disconnect();
-	delete client;
 }
 
 std::string Server::responseToString(json response, bool payload){
