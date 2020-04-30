@@ -176,7 +176,7 @@ bool json::toBool() {
 double json::toDouble() {
 	switch(val.index()) {
 		case boolean_t: return std::get<bool>(val);
-		case number_t: 	return int(std::get<double>(val)) != 0;
+		case number_t: 	return std::get<double>(val);
 		case string_t:	return strtof(std::get<std::string>(val).c_str(), nullptr);
 		case array_t:
 		case object_t:	
@@ -198,8 +198,8 @@ std::string json::toString() {
 		case number_t: 	return std::to_string(std::get<double>(val));
 		case string_t:	return std::get<std::string>(val);
 		case array_t:
-		case object_t:	
-		default:		return print();
+		case object_t:	return print();
+		default:		return "";
 	}
 }
 
