@@ -439,7 +439,8 @@ export json getUserData(json request, Server*, tcpsocket*){
 		{"version", "HTTP/1.1"},
 		{"status", [&data, &username, &password, &sid]() -> int {
 			if(isSessionValid(sid, username) || isUserValid(username, password)){
-				std::vector<std::array<sqlite::variant, 3>> result = db->exec<3>("select name, email, length(sid) = 1 as session from users where name = ?1", {username});
+				std::vector<std::array<sqlite::variant, 3>> result = db->exec<3>(
+					"select name, email, length(sid) = 1 as session from users where sid = ?1 or name = ?2", {sid, username});
 				data = json::object{
 					{"username", std::get<std::string>(result[0][0])},
 					{"email", std::get<std::string>(result[0][1])},
