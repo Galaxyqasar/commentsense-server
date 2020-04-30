@@ -2,6 +2,7 @@
 #include <thread>
 #include <ctime>
 #include <functional>
+#include <csignal>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/daily_file_sink.h>

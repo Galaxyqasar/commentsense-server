@@ -121,7 +121,7 @@ void Server::handleClient(tcpsocket *client){
 		}
 	}
 	spdlog::info("response: {}", inflate(response.substr(0, response.find("\n\n"))));
-	if(response != ""){
+	if(response.length()){
 		client->send(response);
 	}
 
@@ -291,6 +291,7 @@ std::string Server::getPassPhrase() {
 }
 
 int main(int argc, char *argv[]){
+	sigaction(SIGPIPE, &(struct sigaction){SIG_IGN}, NULL);
 	srand(unsigned(time(nullptr)));
 	std::vector<std::string> args(argv + 1, argv + argc);
 
