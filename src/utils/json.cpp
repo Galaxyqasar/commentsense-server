@@ -133,7 +133,7 @@ json::json(const char *str, size_t length) {
 				this->val = true;
 			}
 			else if(strncmp(str, "false", 5) == 0) {
-				this->val = true;
+				this->val = false;
 			}
 			else if(strncmp(str, "null", 4) == 0) {
 				this->val = std::monostate();
