@@ -158,10 +158,17 @@ public:
 	json& operator[](std::string key);
 	json& operator[](size_t index);
 
-	inline double& toNumber() 		{return std::get<double>(val);}
-	inline std::string& toString() 	{return std::get<std::string>(val);}
-	inline object& toObject() 		{return std::get<object>(val);}
-	inline array& toArray() 		{return std::get<array>(val);}
+	inline bool& getBool() 			{return std::get<bool>(val);}
+	inline double& getNum() 		{return std::get<double>(val);}
+	inline std::string& getStr() 	{return std::get<std::string>(val);}
+	inline object& getObject() 		{return std::get<object>(val);}
+	inline array& getArray() 		{return std::get<array>(val);}
+
+	bool toBool();
+	double toDouble();
+	float toFloat();
+	int toInt();
+	std::string toString();
 
 	std::string print(size_t offset = 1);
 	void print(std::ostream &output, int offset = 1);

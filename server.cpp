@@ -136,11 +136,11 @@ std::string Server::responseToString(json response, bool payload){
 		return "";
 	std::stringstream result;
 	result<<response["version"].toString()<<" ";
-	result<<int(response["status"].toNumber())<<" ";
-	result<<HttpStatusReasonPhrase(response["status"].isNumber() ? response["status"].toNumber() : 500)<<"\n";
+	result<<int(response["status"].toInt())<<" ";
+	result<<HttpStatusReasonPhrase(response["status"].isNumber() ? response["status"].toInt() : 500)<<"\n";
 
 	json header = response["header"].isObject() ? response["header"] : json::object{};
-	for(auto & [key, val] : header.toObject()){
+	for(auto & [key, val] : header.getObject()){
 		result<<key<<": "<<val.toString()<<"\n";
 	}
 
@@ -152,7 +152,7 @@ std::string Server::responseToString(json response, bool payload){
 	}
 	result<<"Connection: close\n";
 
-	std::string data = response["data"].isString() ? response["data"].toString() : "";
+	std::string data = response["data"].toString();
 	if(data.size() > 0 && payload){
 		result<<"Content-Length: "<<data.size()<<"\n";
 		result<<"\n";
@@ -164,7 +164,7 @@ std::string Server::responseToString(json response, bool payload){
 std::string Server::requestToString(json data){
 	std::stringstream result;
 	result<<data["method"].toString()<<" "<<data["url"].toString()<<" "<<data["version"].toString()<<"\n";
-	for(auto & [key, val] : data["header"].toObject()){
+	for(auto & [key, val] : data["header"].getObject()){
 		result<<key<<": "<<val.toString()<<"\n";
 	}
 	std::cout<<result.str()<<"\n";
@@ -234,7 +234,7 @@ void Server::loadPlugins(std::string fileName){
 	std::string source((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 	json data = json::parse(source);
 	//std::cout<<data.print()<<"\n";
-	for(auto &e : data.toArray()){
+	for(auto &e : data.getArray()){
 		try {
 			std::string libname = e["dll"].toString();
 			std::string func = e["function"].toString();

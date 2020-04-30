@@ -310,8 +310,8 @@ export json voteComment(json request, Server*, tcpsocket *client){
 	std::string password = data["password"].toString();
 	std::string sid = request["cookies"]["sid"].isString() ? request["cookies"]["sid"].toString() : data["sid"].toString();
 
-	int id = data["id"].toNumber();
-	bool vote = data["vote"].toNumber();
+	int id = data["id"].toInt();
+	bool vote = data["vote"].toBool();
 	std::string uid = std::to_string(getUserId(username));
 
 	spdlog::info("voteComment(id: {}, username: \'{}\', upvote: {})", id, username, vote ? "true" : "false");
@@ -355,7 +355,7 @@ export json voteComment(json request, Server*, tcpsocket *client){
 }
 
 export json signup(json request, Server*, tcpsocket *client){
-	std::string payload = client->recv(request["header"]["content-length"].toNumber());
+	std::string payload = client->recv(request["header"]["content-length"].toInt());
 	json data = json::parse(payload);
 
 	std::string username = data["username"].toString();
@@ -457,7 +457,7 @@ export json getUserData(json request, Server*, tcpsocket*){
 }
 
 export json changeUserData(json request, Server*, tcpsocket *client) {
-	std::string payload = client->recv(request["header"]["content-length"].toNumber());
+	std::string payload = client->recv(request["header"]["content-length"].toInt());
 	json data = json::parse(payload);
 
 	std::string username = data["username"].toString();
