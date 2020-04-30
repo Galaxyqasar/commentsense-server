@@ -107,7 +107,7 @@ hidden std::string createSession(std::string username, std::string password, int
 /////////////exported functions////////////////
 ///////////////////////////////////////////////
 
-export json getStats(json request, Server*, tcpsocket*) {
+export json getStats(json request, Server *server, tcpsocket*) {
 	return json::object{
 		{"request", request},
 		{"version", "HTTP/1.1"},
@@ -121,7 +121,7 @@ export json getStats(json request, Server*, tcpsocket*) {
 			{"/proc/meminfo", read("/proc/meminfo")},
 			{"/proc/cpuinfo", read("/proc/cpuinfo")},
 			{"/proc/self/status", read("/proc/self/status")}
-		}).print(), crypt::sha256::hash("fce19d339f85f986b0caaf473a471f70f923948227c8c4c0633d077c22ff235e" + request["url"].toString()), crypt::encrypt)}
+		}).print(), crypt::sha256::hash(server->getPassPhrase() + request["url"].toString()), crypt::encrypt)}
 	};
 }
 
@@ -438,7 +438,7 @@ export json getUserData(json request, Server*, tcpsocket*){
 		{"request", request},
 		{"version", "HTTP/1.1"},
 		{"status", [&data, &username, &password, &sid]() -> int {
-			if(isSessionValid(sid) || isUserValid(username, password)){
+			if(isSessionValid(sid, username) || isUserValid(username, password)){
 				std::vector<std::array<sqlite::variant, 3>> result = db->exec<3>("select name, email, length(sid) = 1 as session from users where name = ?1", {username});
 				data = json::object{
 					{"username", std::get<std::string>(result[0][0])},
@@ -545,11 +545,11 @@ structure["sqlite_sequence"] = R"(CREATE TABLE sqlite_sequence(name,seq))";
 			tablecount++;
 		}
 	}
-	//if(reinitdb || tablecount != 4) {
+	if(reinitdb || tablecount != 4) {
 		for(std::string str : split(read("init.sql"), ";")) {
 			db->exec(str);
 		}
-	//}
+	}
 	db->exec("update users set sid = \'\', session = \'\' where name not like \'test\';");
 }
 

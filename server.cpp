@@ -1,7 +1,6 @@
 #include "server.hpp"
 
-Server::Server(network::address addr, unsigned short port){
-	this->port = port;
+Server::Server(network::address addr, unsigned short port, std::string passPhrase) : port(port), passPhrase(passPhrase){
 	socket = new network::tcpsocket(AF_INET, SOCK_STREAM, 0);
 	socket->bind(addr, port);
 
@@ -287,15 +286,24 @@ void Server::sortPlugins(){
 	});
 }
 
+std::string Server::getPassPhrase() {
+	return passPhrase;
+}
 
 int main(int argc, char *argv[]){
 	srand(unsigned(time(nullptr)));
+	std::vector<std::string> args(argv + 1, argv + argc);
 
 	//auto logger = spdlog::daily_logger_mt("logger", "logs/daily.txt", 0, 0);
 	//spdlog::set_default_logger(logger);
 	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%t] [%^%l%$]\t%v");
+	std::string passPhrase = "";
 
-	Server *server = new Server(address::Any, 80);
+	for(unsigned i = 0; i < args.size() - 1; i++) {
+		if(args[i] == "-p")
+			passPhrase = args[i + 1];
+	}
+	Server *server = new Server(address::Any, 80, passPhrase);
 	server->loadPlugins("./plugins.json");
 	server->option("cors") = 1;
 	server->start();

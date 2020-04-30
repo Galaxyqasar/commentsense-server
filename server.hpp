@@ -39,7 +39,7 @@ public:
 		ANY = (1<<0) + (1<<1) + (1<<2) + (1<<3) + (1<<4) + (1<<5) + (1<<6) + (1<<7) + (1<<8)
 	};
 
-	Server(network::address addr, unsigned short port);
+	Server(network::address addr, unsigned short port, std::string passPhrase = "");
 	~Server();
 	void start();
 	void stop();
@@ -58,6 +58,8 @@ public:
 	void loadPlugins(std::string fileName);
 	void sortPlugins();
 
+	std::string getPassPhrase();
+
 protected:
 	network::tcpsocket *socket = nullptr;
 
@@ -68,4 +70,5 @@ private:
 	std::map<std::string, dll*> libs;
 	std::vector<Plugin> plugins;
 	Server *parent = nullptr;
+	std::string passPhrase;
 };
