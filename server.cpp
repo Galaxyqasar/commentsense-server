@@ -299,8 +299,8 @@ int main(int argc, char *argv[]){
 	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%t] [%^%l%$]\t%v");
 	std::string passPhrase = "";
 
-	for(unsigned i = 0; i < args.size() - 1; i++) {
-		if(args[i] == "-p")
+	for(unsigned i = 0; i < args.size(); i++) {
+		if(args[i] == "-p" && i < args.size() - 1)
 			passPhrase = args[i + 1];
 	}
 	Server *server = new Server(address::Any, 80, passPhrase);
