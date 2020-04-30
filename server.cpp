@@ -291,7 +291,8 @@ std::string Server::getPassPhrase() {
 }
 
 int main(int argc, char *argv[]){
-	sigaction(SIGPIPE, &(struct sigaction){SIG_IGN}, NULL);
+	struct sigaction s{SIG_IGN};
+	sigaction(SIGPIPE, &s, NULL);
 	srand(unsigned(time(nullptr)));
 	std::vector<std::string> args(argv + 1, argv + argc);
 
