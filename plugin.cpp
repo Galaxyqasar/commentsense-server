@@ -313,7 +313,7 @@ export json voteComment(json request, Server*, tcpsocket *client){
 
 	int id = data["id"].toInt();
 	bool vote = data["vote"].toBool();
-	std::string uid = std::to_string(getUserId(username));
+	std::string uid = std::to_string(getUserId(username, sid));
 
 	spdlog::info("voteComment(id: {}, username: \'{}\', upvote: {})", id, username, vote ? "true" : "false");
 	return json::object{
