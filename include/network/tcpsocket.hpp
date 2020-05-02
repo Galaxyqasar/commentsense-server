@@ -68,9 +68,13 @@ namespace network{
 		std::string getError();
 		std::string getClientIP();
 
+		//virtual bool send(const char *buffer, size_t size);
 		virtual bool send(std::string data);
+		//virtual bool sendChar(int c);
+		//virtual void recv(char *buffer, size_t size);
 		virtual std::string recv(int len);
 		virtual std::string recvLine(char delim = '\n', size_t maxlen = std::numeric_limits<size_t>::max());
+		//virtual int recvChar();
 	private:
 		bool connected = false;
 		#if defined(WINDOWS)

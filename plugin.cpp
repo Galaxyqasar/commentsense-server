@@ -41,8 +41,8 @@ hidden std::string getContentType(std::string filename) {
 	return contentTypes[ending];
 }
 
-hidden int getUserId(std::string username) {
-	std::vector<std::array<sqlite::variant, 1>> result = db->exec<1>("select id from users where name like ?1;", {username});
+hidden int getUserId(std::string username, std::string sid = "-") {
+	std::vector<std::array<sqlite::variant, 1>> result = db->exec<1>("select id from users where name like ?1 or sid like ?2;", {username, sid});
 	int userId = -1;
 	if(result.size() && result[0][0].index()) {
 		userId = std::get<int>(result[0][0]);
@@ -196,9 +196,10 @@ export json getFile(json request, Server *server, tcpsocket *client) {
 export json getComments(json request, Server*, tcpsocket*){
 	std::string url = request["url"].toString();
 	std::string site = request["parameters"]["site"].isString() ? request["parameters"]["site"].toString() : "";
-	std::string name = request["parameters"]["name"].isString() ? request["parameters"]["name"].toString() : "";
+	std::string name = request["parameters"]["username"].isString() ? request["parameters"]["username"].toString() : "";
+	std::string sid = request["cookies"]["sid"].isString() ? request["cookies"]["sid"].toString() : request["parameters"]["sid"].isString() ? request["parameters"]["sid"].toString() : "";
 	int count = request["parameters"]["count"].isString() ? atoi(request["parameters"]["count"].toString().c_str()) : INT_MAX;
-	int userId = getUserId(name);
+	int userId = getUserId(name, sid);
 
 	static sqlite::stmt stmt("select id,headline,content,author,votes,url,date,"
 						"(length(votes)-length(replace(votes, \",\", \"\"))) + min(1, min(length(votes),1)) as count "
