@@ -254,9 +254,9 @@ public:
 			new tokenChar<'\t', false>(Token::Space),
 			new tokenChar<'\n', false>(Token::Space),
 			new tokenStringExpr(Token::String),
-			new tokenString("null", Token::Null),
-			new tokenString("true", Token::True),
-			new tokenString("false", Token::False),
+			new tokenString<false>("null", Token::Null),
+			new tokenString<false>("true", Token::True),
+			new tokenString<false>("false", Token::False),
 			new tokenNumberExpr(Token::Number)
 		}, true);
 		return json(stream);

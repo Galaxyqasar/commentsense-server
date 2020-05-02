@@ -6,6 +6,7 @@
 - [sqlite3](https://www.sqlite.org/index.html)
 - [tlse](https://github.com/eduardsui/tlse)
 - [libtomcrypt](https://github.com/libtom/libtomcrypt)
+- [libtommath](https://github.com/libtom/libtommath)
 
 ## api:
 
@@ -18,9 +19,7 @@
 	- description:
 		- returns the file in <./data/%url%>
 		- if the file doesn't exist: 
-			- status-code 404, no payload in the response
-		- if the file is too big ( > 50 Mb):
-			- status-code 422, payload: `{"status": "error: file too big"}` (json)
+			- status-code 404, payload == index.html
 		- else:
 			- status-code 200, payload == file-content
 	- examples:

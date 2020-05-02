@@ -62,9 +62,13 @@ def compile(file, compiler, args):
 	src = "src/" + file
 	dest = "build/" + file[:file.find('.')] + '.o'
 	makedir(dest[:dest.rfind('/')])
+	if file.startswith("tomcrypt"):
+		args += ["-Iinclude/tomcrypt"]
+	if file.startswith("tommath"):
+		args += ["-Iinclude/tommath"]
 	if check(src, dest):
 		print("compiling ", src, "->", dest)
-		compiler([src, "-o", dest, "-c", "-Iinclude", "-Iinclude/tomcrypt", "-Iinclude/tommath"] + args)
+		compiler([src, "-o", dest, "-c", "-Iinclude"] + args)
 	return dest
 
 def link(files, target, args):
