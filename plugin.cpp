@@ -241,7 +241,7 @@ export json getComments(json request, Server*, tcpsocket*){
 export json getTopSites(json request, Server*, tcpsocket*){
 	std::string url = request["url"].toString();
 	std::string pattern = request["parameters"]["url"].isString() ? request["parameters"]["url"].toString() : "%";
-	int count = request["parameters"]["count"].isString() ? atoi(request["parameters"]["count"].toString().c_str()) : 5;
+	int count = request["parameters"]["count"].isString() ? atoi(request["parameters"]["count"].toString().c_str()) : 100;
 
 	static sqlite::stmt stmt("select count(id) as n,url from comments where url like ?1 "
 							 "group by url order by n desc limit ?2;", db, {"", 0});
@@ -426,7 +426,7 @@ export json signout(json request, Server*, tcpsocket*){
 		{"version", "HTTP/1.1"},
 		{"status", 200},
 		{"header", json::object{
-			{"Set-Cookie", "sid=; PATH=/"},
+			{"Set-Cookie", "sid=; PATH=/; Max-Age=0"},
 			{"Content-Type", getContentType("json")}
 		}}
 	};
