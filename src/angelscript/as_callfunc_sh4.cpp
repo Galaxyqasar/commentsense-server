@@ -43,16 +43,16 @@
 // * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcechp40/html/_callsh4_SH_4_Calling_Standard.asp
 
 
-#include "as_config.h"
+#include <angelscript/as_config.h>
 
 #ifndef AS_MAX_PORTABILITY
 #ifdef AS_SH4
 
-#include "as_callfunc.h"
-#include "as_scriptengine.h"
-#include "as_texts.h"
-#include "as_tokendef.h"
-#include "as_context.h"
+#include <angelscript/as_callfunc.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_tokendef.h>
+#include <angelscript/as_context.h>
 
 #include <stdio.h>
 #include <stdlib.h>

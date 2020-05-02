@@ -36,16 +36,16 @@
 //
 
 
-#include "as_config.h"
-#include "as_builder.h"
-#include "as_parser.h"
-#include "as_compiler.h"
-#include "as_tokendef.h"
-#include "as_string_util.h"
-#include "as_outputbuffer.h"
-#include "as_texts.h"
-#include "as_scriptobject.h"
-#include "as_debug.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_builder.h>
+#include <angelscript/as_parser.h>
+#include <angelscript/as_compiler.h>
+#include <angelscript/as_tokendef.h>
+#include <angelscript/as_string_util.h>
+#include <angelscript/as_outputbuffer.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_scriptobject.h>
+#include <angelscript/as_debug.h>
 
 BEGIN_AS_NAMESPACE
 

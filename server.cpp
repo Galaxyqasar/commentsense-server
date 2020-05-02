@@ -4,7 +4,7 @@ Server::Server(network::address addr, unsigned short port, std::string passPhras
 	socket = new network::tcpsocket(AF_INET, SOCK_STREAM, 0);
 	socket->bind(addr, port);
 
-	registerPlugin({ANY - GET, "default", "/", [](json request, Server*, tcpsocket*){
+	plugins.push_back({ANY - GET, "default", "/", [](json request, Server*, tcpsocket*){
 		spdlog::error("no plugin found");
 		return json::object{
 			{"request", request},
@@ -17,6 +17,9 @@ Server::Server(network::address addr, unsigned short port, std::string passPhras
 }
 
 Server::~Server(){
+	for(auto &[key, dll] : libs) {
+		delete dll;
+	}
 	delete socket;
 }
 
@@ -24,27 +27,20 @@ void Server::start(){
 	socket->listen();
 	while(!quit){
 		tcpsocket *client = socket->accept({5,0});
-		std::thread handler([this, client]() {
-			try {
-				spdlog::error("1");
-				handleClient(client);
-			} catch(std::exception &e) {
-				spdlog::error("exception while handling client: \'{}\'", e.what());
-			}
-			spdlog::error("2");
+		if(client && !quit) {
+			std::thread([this, client]() {
+				try {
+					handleClient(client);
+				} catch(std::exception &e) {
+					spdlog::error("exception while handling client: \'{}\'", e.what());
+				}
+				delete client;
+			}).detach();
+		}
+		else if(client) {
 			delete client;
-		});
-		handler.detach();
+		}
 	}
-}
-
-void Server::stop(){
-	quit = true;
-	tcpsocket s(AF_INET, SOCK_STREAM, 0);
-	s.connect("localhost", port);	//connect to myself so the listenthread stops
-	s.send("\n\n");	//send smthing so the handleclient function returns
-	s.recv(1);
-	s.disconnect();
 }
 
 void Server::handleClient(tcpsocket *client){
@@ -69,7 +65,7 @@ void Server::handleClient(tcpsocket *client){
 	if(request["version"].toString() != "HTTP/1.1" || request["method"].toInt() == NONE) {
 		return;
 	}
-	std::string url = request["url"].toString();
+	std::string url = decodeUrl(request["url"].toString());
 	if(url.find('?') < url.length() - 1) {
 		request["url"] = url.substr(0, url.find('?'));
 		std::string parameters = url.substr(url.find('?') + 1);
@@ -108,7 +104,7 @@ void Server::handleClient(tcpsocket *client){
 	int method = request["method"].toInt();
 	std::string response;
 	for(const Plugin &p : plugins){
-		if((p.method & method) && (request["url"].toString().find(p.suburl) == 0)){	//url starts with p.suburl
+		if(p.active && (p.method & method) && (request["url"].toString().find(p.suburl) == 0)){
 			try {
 				response = responseToString(p.callback(request, this, client));
 			}
@@ -172,12 +168,6 @@ std::string Server::requestToString(json data){
 	return result.str();
 }
 
-int& Server::option(const std::string &key){
-	if(parent)
-		return parent->option(key);
-	return options[key];
-}
-
 int Server::parseMethod(std::string method){
 	if(method == "CONNECT")
 		return CONNECT;
@@ -226,10 +216,6 @@ dll& Server::loadLib(std::string name){
 	return *libs[name];
 }
 
-void Server::registerPlugin(const Plugin &p){
-	plugins.push_back(p);
-}
-
 void Server::loadPlugins(std::string fileName){
 	std::ifstream f(fileName);
 	std::string source((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
@@ -244,9 +230,9 @@ void Server::loadPlugins(std::string fileName){
 			std::string suburl = e["suburl"].toString();
 			dll &lib = loadLib(libname);
 			if(lib.get<json(*)(json, Server*, tcpsocket*)>(func)) {
-				registerPlugin({
+				plugins.push_back(Plugin{
 					parseMethod(method), name, suburl,
-					lib.get<json(*)(json, Server*, tcpsocket*)>(func)
+					lib.get<json(*)(json, Server*, tcpsocket*)>(func), true
 				});
 			}
 		}
@@ -259,6 +245,10 @@ void Server::loadPlugins(std::string fileName){
 	for(Plugin p : plugins){
 		spdlog::info("    {} : {}", p.name, p.suburl);
 	}
+}
+
+void Server::registerPlugin(const Plugin &plugin) {
+	plugins.push_back(plugin);
 }
 
 void Server::sortPlugins(){
@@ -288,8 +278,40 @@ void Server::sortPlugins(){
 	});
 }
 
+void Server::setOption(std::string key, int val) {
+	options[key] = val;
+}
+
+void Server::setPluginActive(std::string name, bool active) {
+	for(Plugin &p : plugins) {
+		if(p.name == name) {
+			p.active = active;
+		}
+	}
+}
+
 std::string Server::getPassPhrase() {
 	return passPhrase;
+}
+
+void Server::stop(){
+	quit = true;
+}
+
+std::stringstream buffer;
+
+void print(std::string str) { buffer<<str; }
+void print(int i) { buffer<<i; }
+void print(double d) { buffer<<d; }
+
+void MessageCallback(const asSMessageInfo *msg) {
+	switch(msg->type) {
+		case asMSGTYPE_ERROR: 		spdlog::error("[{}:{}] {} : {}", msg->row, msg->col, msg->section, msg->message); break;
+		case asMSGTYPE_WARNING: 	spdlog::warn("[{}:{}] {} : {}", msg->row, msg->col, msg->section, msg->message); break;
+		case asMSGTYPE_INFORMATION: spdlog::info("[{}:{}] {} : {}", msg->row, msg->col, msg->section, msg->message); break;
+	}
+	buffer<<(msg->type == asMSGTYPE_ERROR ? "[ERROR]" : msg->type == asMSGTYPE_WARNING ? "[WARNING]" : "[INFO]");
+	buffer<<"["<<msg->row<<":"<<msg->col<<"] "<<msg->section<<" : "<<msg->message<<"\n";
 }
 
 int main(int argc, char *argv[]){
@@ -309,10 +331,50 @@ int main(int argc, char *argv[]){
 		if(args[i] == "-p" && i < args.size() - 1)
 			passPhrase = args[i + 1];
 	}
-	Server *server = new Server(address::Any, 80, passPhrase);
+
+	asIScriptEngine *engine = asCreateScriptEngine();
+	engine->SetMessageCallback(asFUNCTION(MessageCallback), nullptr, asCALL_CDECL);
+	RegisterScriptAny(engine);
+	RegisterScriptMath(engine);
+	RegisterScriptArray(engine, true);
+	RegisterStdString(engine);
+	RegisterStdStringUtils(engine);
+
+	Server *server = new Server(address::Any, 80, passPhrase.length() ? stringFromHex(crypt::sha256::hash(passPhrase)) : "");
+
+	engine->RegisterGlobalFunction("void setOption(string name, int state)", 
+		asMETHODPR(Server, setOption, (std::string, int), void), asCALL_THISCALL_ASGLOBAL, server);
+	engine->RegisterGlobalFunction("void setPluginActive(string name, bool active)", 
+		asMETHODPR(Server, setPluginActive, (std::string, bool), void), asCALL_THISCALL_ASGLOBAL, server);
+	engine->RegisterGlobalFunction("void stop()", 
+		asMETHODPR(Server, stop, (void), void), asCALL_THISCALL_ASGLOBAL, server);
+	engine->RegisterGlobalFunction("void print(string val)", asFUNCTIONPR(print, (std::string), void), asCALL_CDECL);
+	engine->RegisterGlobalFunction("void print(int val)", asFUNCTIONPR(print, (int), void), asCALL_CDECL);
+	engine->RegisterGlobalFunction("void print(double val)", asFUNCTIONPR(print, (double), void), asCALL_CDECL);
+	server->registerPlugin({Server::GET, "call as function", "/api/server", 
+		[engine, server](json request, Server*, tcpsocket*){
+			buffer.str("");	//clear buffer
+			std::string code = request["parameters"]["code"].toString();
+			if(server->getPassPhrase().length())
+				code = crypt::rijndael(code, server->getPassPhrase(), crypt::decrypt);
+			spdlog::info("running as code \'{}\'", code);
+
+			ExecuteString(engine, code.c_str());
+			asThreadCleanup();
+			return json::object{
+				{"request", request},
+				{"version", "HTTP/1.1"},
+				{"status", 200},
+				{"header", json::object{}},
+				{"data", buffer.str()}
+			};
+		}, true
+	});
 	server->loadPlugins("./plugins.json");
-	server->option("cors") = 1;
+	server->setOption("cors", 1);
 	server->start();
+	usleep(1000000);
 	delete server;
+	engine->ShutDownAndRelease();
 	return 0;
 }

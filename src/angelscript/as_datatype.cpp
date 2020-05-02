@@ -35,13 +35,13 @@
 // This class describes the datatype for expressions during compilation
 //
 
-#include "as_config.h"
-#include "as_datatype.h"
-#include "as_tokendef.h"
-#include "as_typeinfo.h"
-#include "as_objecttype.h"
-#include "as_scriptengine.h"
-#include "as_tokenizer.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_datatype.h>
+#include <angelscript/as_tokendef.h>
+#include <angelscript/as_typeinfo.h>
+#include <angelscript/as_objecttype.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_tokenizer.h>
 
 BEGIN_AS_NAMESPACE
 

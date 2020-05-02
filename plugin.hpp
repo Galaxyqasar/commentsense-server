@@ -2,7 +2,7 @@
 
 #include "server.hpp"
 
-#include <crypt/crypt.hpp>
+#include <crypt/rijndael.hpp>
 #include <crypt/sha.hpp>
 #include <sqlite/sqlite.hpp>
 

@@ -37,8 +37,8 @@
 
 
 
-#include "as_config.h"
-#include "as_scriptcode.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_scriptcode.h>
 
 BEGIN_AS_NAMESPACE
 

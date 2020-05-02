@@ -9,10 +9,13 @@ namespace crypt{
 		return result;
 	}
 	std::string vigenere(std::string source, std::string password, int mode){
-		std::string result(source.size(), '\0');
-		for(unsigned i = 0; i < source.size(); i++){
-			result[i] = int(source[i]) - (int(password[i%password.size()]) * mode);
+		if(password.length()) {
+			std::string result(source.size(), '\0');
+			for(unsigned i = 0; i < source.size(); i++){
+				result[i] = int(source[i]) - (int(password[i%password.size()]) * mode);
+			}
+			return result;
 		}
-		return result;
+		return source;
 	}
 }

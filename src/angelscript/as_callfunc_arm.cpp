@@ -48,16 +48,16 @@
 // AAPCS: http://infocenter.arm.com/help/topic/com.arm.doc.ihi0042d/IHI0042D_aapcs.pdf
 // iOS: http://developer.apple.com/library/ios/documentation/Xcode/Conceptual/iPhoneOSABIReference/iPhoneOSABIReference.pdf
 
-#include "as_config.h"
+#include <angelscript/as_config.h>
 
 #ifndef AS_MAX_PORTABILITY
 #ifdef AS_ARM
 
-#include "as_callfunc.h"
-#include "as_scriptengine.h"
-#include "as_texts.h"
-#include "as_tokendef.h"
-#include "as_context.h"
+#include <angelscript/as_callfunc.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_tokendef.h>
+#include <angelscript/as_context.h>
 
 #if defined(AS_SOFTFP)
 

@@ -35,10 +35,10 @@
 // This class identifies tokens from the script code
 //
 
-#include "as_config.h"
-#include "as_scriptengine.h"
-#include "as_tokenizer.h"
-#include "as_tokendef.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_tokenizer.h>
+#include <angelscript/as_tokendef.h>
 
 #if !defined(AS_NO_MEMORY_H)
 #include <memory.h>

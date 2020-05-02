@@ -37,16 +37,16 @@
 
 
 
-#include "as_config.h"
-#include "as_scriptfunction.h"
-#include "as_tokendef.h"
-#include "as_scriptengine.h"
-#include "as_callfunc.h"
-#include "as_bytecode.h"
-#include "as_texts.h"
-#include "as_scriptnode.h"
-#include "as_builder.h"
-#include "as_scriptcode.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_scriptfunction.h>
+#include <angelscript/as_tokendef.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_callfunc.h>
+#include <angelscript/as_bytecode.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_scriptnode.h>
+#include <angelscript/as_builder.h>
+#include <angelscript/as_scriptcode.h>
 
 #include <cstdlib> // qsort
 

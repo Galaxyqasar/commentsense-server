@@ -37,16 +37,16 @@
 
 #include <stdio.h> // fopen(), fprintf(), fclose()
 
-#include "as_config.h"
+#include <angelscript/as_config.h>
 
 #ifndef AS_NO_COMPILER
 
-#include "as_bytecode.h"
-#include "as_debug.h" // mkdir()
-#include "as_array.h"
-#include "as_string.h"
-#include "as_scriptengine.h"
-#include "as_debug.h"
+#include <angelscript/as_bytecode.h>
+#include <angelscript/as_debug.h> // mkdir()
+#include <angelscript/as_array.h>
+#include <angelscript/as_string.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_debug.h>
 
 BEGIN_AS_NAMESPACE
 

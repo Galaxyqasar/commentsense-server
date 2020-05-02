@@ -38,10 +38,10 @@
 
 #include <stdlib.h>
 
-#include "as_gc.h"
-#include "as_scriptengine.h"
-#include "as_scriptobject.h"
-#include "as_texts.h"
+#include <angelscript/as_gc.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_scriptobject.h>
+#include <angelscript/as_texts.h>
 
 BEGIN_AS_NAMESPACE
 

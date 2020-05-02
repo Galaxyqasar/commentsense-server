@@ -36,13 +36,13 @@
 // A class that holds a script module
 //
 
-#include "as_config.h"
-#include "as_module.h"
-#include "as_builder.h"
-#include "as_context.h"
-#include "as_texts.h"
-#include "as_debug.h"
-#include "as_restore.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_module.h>
+#include <angelscript/as_builder.h>
+#include <angelscript/as_context.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_debug.h>
+#include <angelscript/as_restore.h>
 
 BEGIN_AS_NAMESPACE
 

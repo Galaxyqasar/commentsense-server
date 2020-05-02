@@ -37,8 +37,8 @@
 
 
 
-#include "as_scriptnode.h"
-#include "as_scriptengine.h"
+#include <angelscript/as_scriptnode.h>
+#include <angelscript/as_scriptengine.h>
 
 BEGIN_AS_NAMESPACE
 

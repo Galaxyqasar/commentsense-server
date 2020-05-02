@@ -42,14 +42,14 @@
 // http://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64/
 // http://math-atlas.sourceforge.net/devel/assembly/abi_sysV_amd64.pdf
  
-#include "as_config.h"
+#include <angelscript/as_config.h>
 
 #ifndef AS_MAX_PORTABILITY
 #ifdef AS_X64_GCC
 
-#include "as_scriptengine.h"
-#include "as_texts.h"
-#include "as_context.h"
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_context.h>
 
 BEGIN_AS_NAMESPACE
 

@@ -35,10 +35,10 @@
 // This class handles the call to a function registered with asCALL_GENERIC
 //
 
-#include "as_generic.h"
-#include "as_scriptfunction.h"
-#include "as_objecttype.h"
-#include "as_scriptengine.h"
+#include <angelscript/as_generic.h>
+#include <angelscript/as_scriptfunction.h>
+#include <angelscript/as_objecttype.h>
+#include <angelscript/as_scriptengine.h>
 
 BEGIN_AS_NAMESPACE
 

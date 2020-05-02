@@ -42,10 +42,10 @@
 #include <malloc.h>
 #endif
 
-#include "as_config.h"
-#include "as_memory.h"
-#include "as_scriptnode.h"
-#include "as_bytecode.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_memory.h>
+#include <angelscript/as_scriptnode.h>
+#include <angelscript/as_bytecode.h>
 
 BEGIN_AS_NAMESPACE
 

@@ -115,13 +115,13 @@ export json getStats(json request, Server *server, tcpsocket*) {
 		{"header", json::object{
 			{"Content-Type", "application/json"}
 		}},
-		{"data", crypt::vigenere(json(json::object{
+		{"data", crypt::rijndael(json({
 			{"/proc/stat", read("/proc/stat")},
 			{"/proc/uptime", read("/proc/uptime")},
 			{"/proc/meminfo", read("/proc/meminfo")},
 			{"/proc/cpuinfo", read("/proc/cpuinfo")},
 			{"/proc/self/status", read("/proc/self/status")}
-		}).print(), crypt::sha256::hash(server->getPassPhrase() + request["url"].toString()), crypt::encrypt)}
+		}).print(), server->getPassPhrase(), crypt::encrypt)}
 	};
 }
 
@@ -226,7 +226,7 @@ export json getComments(json request, Server*, tcpsocket*){
 						{"author", std::get<std::string>(line[3])},
 						{"date", std::get<std::string>(line[6])},
 						{"likes", std::get<int>(line[7])},
-						{"voted", std::find(votes.begin(), votes.end(), std::to_string(userId)) != votes.end()},
+						{"voted", std::find(votes.begin(), votes.end(), std::to_string(userId)) != votes.end() && userId >= 0},
 						{"url", std::get<std::string>(line[5])}
 					});
 				}

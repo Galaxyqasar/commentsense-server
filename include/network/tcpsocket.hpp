@@ -13,11 +13,15 @@
 	#include <netinet/in.h>
 	#include <netdb.h>
 	#include <arpa/inet.h>
+	#include <sys/select.h>
+	#include <fcntl.h>
 #endif
 
 #include <iostream>
 #include <string>
 #include <limits>
+
+#include <spdlog/spdlog.h>
 
 #define CHUNK_SIZE 512
 
@@ -75,6 +79,7 @@ namespace network{
 		#else
 			int handle;
 			struct sockaddr_in client;
+			fd_set master, readfds;
 		#endif
 	};
 }

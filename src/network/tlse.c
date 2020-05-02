@@ -1,5 +1,3 @@
-#define TLS_AMALGAMATION
-
 /********************************************************************************
  Copyright (c) 2016-2020, Eduard Suica
  All rights reserved.

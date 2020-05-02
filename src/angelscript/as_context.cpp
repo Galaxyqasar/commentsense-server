@@ -37,16 +37,16 @@
 
 #include <math.h> // fmodf() pow()
 
-#include "as_config.h"
-#include "as_context.h"
-#include "as_scriptengine.h"
-#include "as_tokendef.h"
-#include "as_texts.h"
-#include "as_callfunc.h"
-#include "as_generic.h"
-#include "as_debug.h" // mkdir()
-#include "as_bytecode.h"
-#include "as_scriptobject.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_context.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_tokendef.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_callfunc.h>
+#include <angelscript/as_generic.h>
+#include <angelscript/as_debug.h> // mkdir()
+#include <angelscript/as_bytecode.h>
+#include <angelscript/as_scriptobject.h>
 
 #ifdef _MSC_VER
 #pragma warning(disable:4702) // unreachable code

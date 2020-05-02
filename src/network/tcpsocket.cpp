@@ -91,16 +91,32 @@ namespace network{
 		if(::bind(handle, (struct sockaddr*)&server, sizeof(server)) < 0);
 	}
 	void tcpsocket::listen(){
-		if(::listen(handle, 64) == -1);
+		if(::listen(handle, 64) == -1) {
+			spdlog::error("tcpsocket::listen()");
+		}
+		FD_ZERO(&master);
+		FD_ZERO(&readfds);
+		FD_SET(handle, &master);
 	}
 	tcpsocket* tcpsocket::accept(struct timeval timeout){
-		unsigned int len = sizeof(client);
-		int new_socket = ::accept(handle, (struct sockaddr *)&client, &len);
-		if(new_socket  == -1);
-		else{
-			setsockopt(new_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+		memcpy(&readfds, &master, sizeof(master));
+		int nready = select(handle + 1, &readfds, NULL, NULL, &timeout);
+		for (int i = 0; i <= handle && nready > 0; i++) {
+			if (FD_ISSET(i, &readfds)) {
+				nready--;
+				if(i == handle) {
+					unsigned int len = sizeof(client);
+					int new_socket = ::accept(handle, (struct sockaddr *)&client, &len);
+					if(new_socket >= 0) {
+						setsockopt(new_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+						return new tcpsocket(new_socket, client);
+					}
+					spdlog::error("accept failed");
+					return nullptr;
+				}
+			}
 		}
-		return new tcpsocket(new_socket, client);
+		return nullptr;
 	}
 	std::string tcpsocket::getClientIP(){
 		std::string ipaddress(16, ' ');

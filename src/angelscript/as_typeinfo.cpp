@@ -34,9 +34,9 @@
 //
 
 
-#include "as_config.h"
-#include "as_typeinfo.h"
-#include "as_scriptengine.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_typeinfo.h>
+#include <angelscript/as_scriptengine.h>
 
 BEGIN_AS_NAMESPACE
 

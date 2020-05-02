@@ -29,7 +29,7 @@
 
 */
 
-#include "as_config.h"
+#include <angelscript/as_config.h>
 
 #include <string.h>     // some compilers declare memcpy() here
 #include <math.h>       // pow()
@@ -38,8 +38,8 @@
 #include <memory.h>
 #endif
 
-#include "as_string.h"
-#include "as_string_util.h"
+#include <angelscript/as_string.h>
+#include <angelscript/as_string_util.h>
 
 BEGIN_AS_NAMESPACE
 

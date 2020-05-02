@@ -38,20 +38,20 @@
 
 #include <stdlib.h>
 
-#include "as_config.h"
-#include "as_scriptengine.h"
-#include "as_builder.h"
-#include "as_context.h"
-#include "as_string_util.h"
-#include "as_tokenizer.h"
-#include "as_texts.h"
-#include "as_module.h"
-#include "as_callfunc.h"
-#include "as_generic.h"
-#include "as_scriptobject.h"
-#include "as_compiler.h"
-#include "as_bytecode.h"
-#include "as_debug.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_builder.h>
+#include <angelscript/as_context.h>
+#include <angelscript/as_string_util.h>
+#include <angelscript/as_tokenizer.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_module.h>
+#include <angelscript/as_callfunc.h>
+#include <angelscript/as_generic.h>
+#include <angelscript/as_scriptobject.h>
+#include <angelscript/as_compiler.h>
+#include <angelscript/as_bytecode.h>
+#include <angelscript/as_debug.h>
 
 BEGIN_AS_NAMESPACE
 

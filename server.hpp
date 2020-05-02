@@ -11,6 +11,11 @@
 #include <utils/json.hpp>
 #include <utils/dll.hpp>
 #include <utils/string.hpp>
+#include <angelscript/angelscript.h>
+#include <angelscript/plugins/all.hpp>
+#include <crypt/sha.hpp>
+#include <crypt/crypt.hpp>
+#include <crypt/rijndael.hpp>
 
 using namespace network;
 using utils::dll;
@@ -22,6 +27,7 @@ struct Plugin {
 	std::string name;
 	std::string suburl;
 	std::function<json(json, Server*, tcpsocket*)> callback;
+	bool active;
 };
 
 class Server{
@@ -48,18 +54,19 @@ public:
 
 	std::string requestToString(json data);
 	std::string responseToString(json response, bool payload = true);
-
-	int& option(const std::string &key);
 	
 	static int parseMethod(std::string method);
 	static std::string decodeUrl(std::string url);
 
-	void registerPlugin(const Plugin &p);
 	dll& loadLib(std::string name);
 	void loadPlugins(std::string fileName);
+	void registerPlugin(const Plugin &plugin);
 	void sortPlugins();
 
 	std::string getPassPhrase();
+
+	void setOption(std::string key, int val);
+	void setPluginActive(std::string name, bool active);
 
 protected:
 	network::tcpsocket *socket = nullptr;
@@ -70,6 +77,5 @@ private:
 	std::map<std::string, int> options;
 	std::map<std::string, dll*> libs;
 	std::vector<Plugin> plugins;
-	Server *parent = nullptr;
 	std::string passPhrase;
 };

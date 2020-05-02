@@ -37,7 +37,7 @@
 // This version is 64 bit PPC specific
 //
 
-#include "as_config.h"
+#include <angelscript/as_config.h>
 
 #ifndef AS_MAX_PORTABILITY
 #ifdef AS_PPC_64
@@ -46,11 +46,11 @@
 #error This code has not been prepared for PPC with 64bit pointers. Most likely the ABI is different
 #else
 
-#include "as_callfunc.h"
-#include "as_scriptengine.h"
-#include "as_texts.h"
-#include "as_tokendef.h"
-#include "as_context.h"
+#include <angelscript/as_callfunc.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_tokendef.h>
+#include <angelscript/as_context.h>
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -93,16 +93,16 @@
 
 
 
-#include "as_config.h"
+#include <angelscript/as_config.h>
 
 #ifndef AS_MAX_PORTABILITY
 #if defined(AS_XENON)
 
-#include "as_callfunc.h"
-#include "as_scriptengine.h"
-#include "as_texts.h"
-#include "as_tokendef.h"
-#include "as_context.h"
+#include <angelscript/as_callfunc.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_tokendef.h>
+#include <angelscript/as_context.h>
 
 #include <stdio.h>
 #include <stdlib.h>

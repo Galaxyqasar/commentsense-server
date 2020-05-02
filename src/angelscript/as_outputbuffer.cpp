@@ -36,12 +36,12 @@
 // be sent to the real output stream
 //
 
-#include "as_config.h"
+#include <angelscript/as_config.h>
 
 #ifndef AS_NO_COMPILER
 
-#include "as_outputbuffer.h"
-#include "as_scriptengine.h"
+#include <angelscript/as_outputbuffer.h>
+#include <angelscript/as_scriptengine.h>
 
 BEGIN_AS_NAMESPACE
 

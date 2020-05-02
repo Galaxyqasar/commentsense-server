@@ -13,13 +13,12 @@ progs = {"gcc" : "gcc" if system in ["Linux", "Darwin"] else parrent + "/cygwin6
 		 "g++" : "g++" if system in ["Linux", "Darwin"] else parrent + "/cygwin64/bin/g++.exe",
 		 "ld" : "ld" if system in ["Linux", "Darwin"] else parrent + "/cygwin64/bin/ld.exe"}
 
-options = ["-D SPDLOG_COMPILED_LIB", "-O0"]
+options = ["-D SPDLOG_COMPILED_LIB", "-O0", "-D LTC_SOURCE", "-D LTC_NO_ROLC"]
 link = []
 rebuild = False
 
 if "--rebuild" in args:
 	rebuild = True
-
 
 def prog(name):
 	return progs[name]
@@ -65,7 +64,7 @@ def compile(file, compiler, args):
 	makedir(dest[:dest.rfind('/')])
 	if check(src, dest):
 		print("compiling ", src, "->", dest)
-		compiler([src, "-o", dest, "-c", "-Iinclude"] + args)
+		compiler([src, "-o", dest, "-c", "-Iinclude", "-Iinclude/tomcrypt", "-Iinclude/tommath"] + args)
 	return dest
 
 def link(files, target, args):
@@ -97,13 +96,12 @@ linkdll("build/yeet.o", "build/yeet.so", "./yeet.so", [])
 
 if not os.path.isfile("build/server.o") or os.path.getmtime("server.cpp") > os.path.getmtime("build/server.o") or os.path.getmtime("server.hpp") > os.path.getmtime("build/server.o"):
 	gpp(["server.cpp", "-c", "-o", "build/server.o", "-Iinclude", "-fpic"] + options)
-	gpp(["build/server.o", "-o", "build/server", "build/yeet.so", "-lpthread", "-ldl"] + options)
-	linkdll("build/server.o", "build/server.so", "./server.so", [])
+gpp(["build/server.o", "-o", "build/server", "build/yeet.so", "-lpthread", "-ldl"] + options)
+linkdll("build/server.o", "build/server.so", "./server.so", [])
 
 if not os.path.isfile("build/plugin.o") or os.path.getmtime("plugin.cpp") > os.path.getmtime("build/plugin.o") or os.path.getmtime("plugin.hpp") > os.path.getmtime("build/plugin.o"):
 	gpp(["plugin.cpp", "-c", "-o", "build/plugin.o", "-Iinclude", "-fpic"] + options)
-	linkdll("build/plugin.o", "build/plugin.so", "./plugin.so", ["build/yeet.so", "build/server.so"])
-
+linkdll("build/plugin.o", "build/plugin.so", "./plugin.so", ["build/yeet.so", "build/server.so"])
 
 copyfile("plugins.json", "build/plugins.json")
 copyfile("init.sql", "build/init.sql")

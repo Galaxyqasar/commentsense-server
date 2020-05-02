@@ -34,7 +34,7 @@
 // The implementation of the atomic class for thread safe reference counting
 //
 
-#include "as_atomic.h"
+#include <angelscript/as_atomic.h>
 
 BEGIN_AS_NAMESPACE
 

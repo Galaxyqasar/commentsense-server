@@ -36,9 +36,9 @@
 // Functions for multi threading support
 //
 
-#include "as_config.h"
-#include "as_thread.h"
-#include "as_atomic.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_thread.h>
+#include <angelscript/as_atomic.h>
 
 BEGIN_AS_NAMESPACE
 

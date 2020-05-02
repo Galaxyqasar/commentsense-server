@@ -37,18 +37,18 @@
 
 #include <math.h> // fmodf() pow()
 
-#include "as_config.h"
+#include <angelscript/as_config.h>
 
 #ifndef AS_NO_COMPILER
 
-#include "as_compiler.h"
-#include "as_tokendef.h"
-#include "as_tokenizer.h"
-#include "as_string_util.h"
-#include "as_texts.h"
-#include "as_parser.h"
-#include "as_debug.h"
-#include "as_context.h"  // as_powi()
+#include <angelscript/as_compiler.h>
+#include <angelscript/as_tokendef.h>
+#include <angelscript/as_tokenizer.h>
+#include <angelscript/as_string_util.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_parser.h>
+#include <angelscript/as_debug.h>
+#include <angelscript/as_context.h>  // as_powi()
 
 BEGIN_AS_NAMESPACE
 

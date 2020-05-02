@@ -60,7 +60,7 @@ std::string stringToHex(std::string str, bool space) {
 std::string stringFromHex(std::string hex) {
 	std::string str(hex.size()/2, '\0');
 	for(unsigned int i = 0; i < str.size(); i++){
-		int higher = hex[i*2] -48;
+		int higher = hex[i*2] - 48;
 		int lower = hex[i*2+1] - 48;
 		higher -= higher > 9 ? 7 : 0;
 		lower -= lower > 9 ? 7 : 0;

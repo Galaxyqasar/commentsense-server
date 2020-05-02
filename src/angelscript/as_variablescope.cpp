@@ -36,11 +36,11 @@
 //
 
 
-#include "as_config.h"
+#include <angelscript/as_config.h>
 
 #ifndef AS_NO_COMPILER
 
-#include "as_variablescope.h"
+#include <angelscript/as_variablescope.h>
 
 BEGIN_AS_NAMESPACE
 

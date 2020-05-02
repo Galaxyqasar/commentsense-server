@@ -49,11 +49,11 @@
 
 
 
-#include "as_config.h"
-#include "as_parser.h"
-#include "as_tokendef.h"
-#include "as_texts.h"
-#include "as_debug.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_parser.h>
+#include <angelscript/as_tokendef.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_debug.h>
 
 #ifdef _MSC_VER
 #pragma warning(disable:4702) // unreachable code

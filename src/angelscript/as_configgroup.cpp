@@ -37,10 +37,10 @@
 
 
 
-#include "as_config.h"
-#include "as_configgroup.h"
-#include "as_scriptengine.h"
-#include "as_texts.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_configgroup.h>
+#include <angelscript/as_scriptengine.h>
+#include <angelscript/as_texts.h>
 
 BEGIN_AS_NAMESPACE
 

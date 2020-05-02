@@ -35,12 +35,12 @@
 // Functions for saving and restoring module bytecode
 // asCRestore was originally written by Dennis Bollyn, dennis@gyrbo.be
 
-#include "as_config.h"
-#include "as_restore.h"
-#include "as_bytecode.h"
-#include "as_scriptobject.h"
-#include "as_texts.h"
-#include "as_debug.h"
+#include <angelscript/as_config.h>
+#include <angelscript/as_restore.h>
+#include <angelscript/as_bytecode.h>
+#include <angelscript/as_scriptobject.h>
+#include <angelscript/as_texts.h>
+#include <angelscript/as_debug.h>
 
 BEGIN_AS_NAMESPACE
 
