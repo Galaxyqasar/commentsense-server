@@ -274,8 +274,8 @@ export json getTopSites(json request, Server*, tcpsocket*){
 export json postComment(json request, Server*, tcpsocket *client){
 	std::string payload = client->recv(atoi(request["header"]["content-length"].toString().c_str()));
 	json data = json::parse(payload);
-	std::string username = data["username"].toString();
-	std::string password = data["password"].toString();
+	std::string username = data["username"].isString() ? data["username"].toString() : "";
+	std::string password = data["password"].isString() ? data["password"].toString() : "";
 	std::string sid = request["cookies"]["sid"].isString() ? request["cookies"]["sid"].toString() : data["sid"].toString();
 	std::string url = data["url"].toString();
 	std::string headline = data["headline"].toString();
@@ -289,8 +289,11 @@ export json postComment(json request, Server*, tcpsocket *client){
 		{"status", [&username, &password, &sid, &headline, &content, &url]() -> int {
 			if(isUserValid(username, password) || isSessionValid(sid, username)){
 				int changes = 0;
-				db->exec("insert into comments (headline,content,author,url,votes,date) values(?1, ?2, ?3, ?4, \'\', datetime(\'now\'));", 
-								{headline, content, username, url}, &changes);
+				db->exec(	"insert into comments (headline,content,author,url,votes,date) "
+							"values(?1, ?2, case when length(?3) > 0 then ?3 else ("
+								"select name from users where sid like ?5"
+							") end, ?4, \'\', datetime(\'now\'));", 
+								{headline, content, username, url, sid}, &changes);
 				if(changes > 0) {
 					return HttpStatus_OK;
 				}
