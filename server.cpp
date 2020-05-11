@@ -80,7 +80,7 @@ int parseMethod(const std::string &method) {
 	return NONE;
 }
 
-#include "signal.h"
+#include <signal.h>
 #include <angelscript/angelscript.h>
 #include <angelscript/plugins/all.hpp>
 #include <crypt/sha.hpp>

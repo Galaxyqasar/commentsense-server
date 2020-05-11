@@ -24,6 +24,7 @@
 #include <iostream>
 #include <limits>
 #include <string>
+#include <chrono>
 
 namespace inet {
 	template<typename address_t>
@@ -49,7 +50,7 @@ namespace inet {
 		bool connected() {
 			int error = 0;
 			socklen_t errorlen = sizeof(error);
-			return getsockopt(handle, SOL_SOCKET, SO_ERROR, &error, &errorlen) == 0;
+			return getopt(SOL_SOCKET, SO_ERROR, &error, &errorlen) == 0;
 		}
 		bool shutdown(int method = SHUT_RDWR) {
 			if(handle >= 0) {
@@ -63,8 +64,13 @@ namespace inet {
 			}
 			return false;
 		}
-		int setopt(int level, int option, const void *value, socklen_t size) {}
-		int getopt(int level, int option, const void *value, socklen_t *size) {}
+		int setopt(int level, int option, const void *value, socklen_t size) {
+			return setsockopt(handle, level, option, value, size);
+		}
+		int getopt(int level, int option, const void *value, socklen_t *size) {
+			return getsockopt(handle, level, option, value, size);
+		}
+
 	protected:
 		tcpsocket(int handle) : handle(handle) {}
 		int handle;
@@ -79,6 +85,20 @@ namespace inet {
 	public:
 		tcpclient() : base(SOCK_STREAM, 0) {}
 		tcpclient(int handle) : base(handle) {}
+
+		void setRecvTimeout(std::chrono::duration<int> timeout) {
+			std::chrono::seconds seconds = std::chrono::duration_cast<std::chrono::seconds>(timeout);
+			std::chrono::microseconds microseconds = std::chrono::duration_cast<std::chrono::microseconds>(timeout - seconds);
+			struct timeval t{seconds.count(), microseconds.count()};
+			base::setopt(SOL_SOCKET, SO_RCVTIMEO, &t, sizeof(t));
+		}
+
+		void setSendTimeout(std::chrono::duration<int> timeout) {
+			std::chrono::seconds seconds = std::chrono::duration_cast<std::chrono::seconds>(timeout);
+			std::chrono::microseconds microseconds = std::chrono::duration_cast<std::chrono::microseconds>(timeout - seconds);
+			struct timeval t{seconds.count(), microseconds.count()};
+			base::setopt(SOL_SOCKET, SO_SNDTIMEO, &t, sizeof(t));
+		}
 
 		bool connect(address_t server) {
 			return ::connect(base::handle, server.addrptr(), server.addrsize()) >= 0;
@@ -147,9 +167,12 @@ namespace inet {
 			}
 			return false;
 		}
-		tcpclient<address_t> accept(address_t *addr = nullptr) {
+		tcpclient<address_t> accept(std::chrono::duration<int> timeout, address_t *addr = nullptr) {
+			std::chrono::seconds seconds = std::chrono::duration_cast<std::chrono::seconds>(timeout);
+			std::chrono::microseconds microseconds = std::chrono::duration_cast<std::chrono::microseconds>(timeout - seconds);
+			struct timeval t{seconds.count(), microseconds.count()};
 			memcpy(&readfds, &master, sizeof(master));
-			int nready = select(base::handle + 1, &readfds, nullptr, nullptr, nullptr);
+			int nready = select(base::handle + 1, &readfds, nullptr, nullptr, &t);
 			for (int i = 0; i <= base::handle && nready > 0; i++) {
 				if (FD_ISSET(i, &readfds)) {
 					nready--;

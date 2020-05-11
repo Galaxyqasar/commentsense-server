@@ -9,6 +9,9 @@
 #include <map>
 #include <string>
 #include <thread>
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 class ServerConfig {
 public:
@@ -123,10 +126,12 @@ public:
 		server.listen(64);
 		while(!quit) {
 			address_t peeraddr;
-			inet::tcpclient<address_t> client = server.accept(&peeraddr);
+			inet::tcpclient<address_t> client = server.accept(1s, &peeraddr);
 			if(client) {
 				std::thread([this](inet::tcpclient<address_t> client, address_t peeraddr){
 					try {
+						client.setRecvTimeout(30s);
+						client.setSendTimeout(30s);
 						json request = recvRequest(client);
 						parseRequest(request);
 						spdlog::info("request: {}", request.print(json::minified));
@@ -136,7 +141,7 @@ public:
 						}
 						json response = handleClient(client, request);
 						std::string res = constructHttpResponse(response, this);
-						spdlog::info("sending response: {}", res.substr(0, res.find("\n\n")));
+						spdlog::info("sending response: {}", removeAll(res.substr(0, res.find("\n\n")), "\n"));
 						client.send(res);
 					} catch (std::exception &e) {
 						std::cout<<e.what();
