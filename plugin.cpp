@@ -47,7 +47,7 @@ hidden int getUserId(std::string username, std::string sid = "-") {
 	if(result.size() && result[0][0].index()) {
 		userId = std::get<int>(result[0][0]);
 	}
-	spdlog::info("getUserId(username: \'{}\') -> {}", username, userId);
+	spdlog::info("getUserId(username: \'{}\', sid: \'{}\') -> {}", username, sid, userId);
 	return userId;
 }
 
@@ -107,7 +107,7 @@ hidden std::string createSession(std::string username, std::string password, int
 /////////////exported functions////////////////
 ///////////////////////////////////////////////
 
-export json getStats(json request, Server *server, tcpsocket*) {
+export json getStats(json request, ServerConfig *server, tcpclient<address_t>*) {
 	return json::object{
 		{"request", request},
 		{"version", "HTTP/1.1"},
@@ -125,7 +125,7 @@ export json getStats(json request, Server *server, tcpsocket*) {
 	};
 }
 
-export json getFile(json request, Server *server, tcpsocket *client) {
+export json getFile(json request, ServerConfig *server, tcpclient<address_t> *client) {
 	std::string url = std::string("www") + request["url"].toString();
 	if(url == "www/")
 		url += "index.html";
@@ -160,7 +160,7 @@ export json getFile(json request, Server *server, tcpsocket *client) {
 			};
 		}
 		else{	//the client wants a really big file so it is sent in chunks
-			client->send(server->responseToString(json::object{
+			client->send(constructHttpResponse(json::object{
 					{"request", request},
 					{"version", "HTTP/1.1"},
 					{"status", HttpStatus_OK},
@@ -169,10 +169,10 @@ export json getFile(json request, Server *server, tcpsocket *client) {
 						{"Content-Type", getContentType(url)},
 						{"Content-Length", std::to_string(size)}
 					}}
-				}, false) + "\n");
+				}, server) + "\n");
 			size_t sent = 0;
 			std::string buffer(max_chunk_size, 0);
-			while(sent < size && client->isConnected()){
+			while(sent < size && client->connected()){
 				f.read(&buffer[0], max_chunk_size);
 				client->send(buffer);
 				sent += max_chunk_size;
@@ -193,7 +193,7 @@ export json getFile(json request, Server *server, tcpsocket *client) {
 	}
 }
 
-export json getComments(json request, Server*, tcpsocket*){
+export json getComments(json request, ServerConfig*, tcpclient<address_t>*){
 	std::string url = request["url"].toString();
 	std::string site = request["parameters"]["site"].isString() ? request["parameters"]["site"].toString() : "";
 	std::string name = request["parameters"]["username"].isString() ? request["parameters"]["username"].toString() : "";
@@ -238,7 +238,7 @@ export json getComments(json request, Server*, tcpsocket*){
 	};
 }
 
-export json getTopSites(json request, Server*, tcpsocket*){
+export json getTopSites(json request, ServerConfig*, tcpclient<address_t>*){
 	std::string url = request["url"].toString();
 	std::string pattern = request["parameters"]["url"].isString() ? request["parameters"]["url"].toString() : "%";
 	int count = request["parameters"]["count"].isString() ? atoi(request["parameters"]["count"].toString().c_str()) : 100;
@@ -271,7 +271,7 @@ export json getTopSites(json request, Server*, tcpsocket*){
 	};
 }
 
-export json postComment(json request, Server*, tcpsocket *client){
+export json postComment(json request, ServerConfig*, tcpclient<address_t> *client){
 	std::string payload = client->recv(atoi(request["header"]["content-length"].toString().c_str()));
 	json data = json::parse(payload);
 	std::string username = data["username"].isString() ? data["username"].toString() : "";
@@ -307,7 +307,7 @@ export json postComment(json request, Server*, tcpsocket *client){
 	};
 }
 
-export json voteComment(json request, Server*, tcpsocket *client){
+export json voteComment(json request, ServerConfig*, tcpclient<address_t> *client){
 	std::string payload = client->recv(atoi(request["header"]["content-length"].toString().c_str()));
 	json data = json::parse(payload);
 	std::string username = data["username"].toString();
@@ -358,7 +358,7 @@ export json voteComment(json request, Server*, tcpsocket *client){
 	};
 }
 
-export json signup(json request, Server*, tcpsocket *client){
+export json signup(json request, ServerConfig*, tcpclient<address_t> *client){
 	std::string payload = client->recv(request["header"]["content-length"].toInt());
 	json data = json::parse(payload);
 
@@ -386,7 +386,7 @@ export json signup(json request, Server*, tcpsocket *client){
 	};
 }
 
-export json signin(json request, Server*, tcpsocket*){
+export json signin(json request, ServerConfig*, tcpclient<address_t>*){
 	std::string username = request["parameters"]["username"].isString() ? request["parameters"]["username"].toString() : "";
 	std::string password = request["parameters"]["password"].isString() ? request["parameters"]["password"].toString() : "";
 	int timeout = request["parameters"]["timeout"].isString() ? atoi(request["parameters"]["timeout"].toString().c_str()) : 86400;
@@ -406,7 +406,7 @@ export json signin(json request, Server*, tcpsocket*){
 	};
 }
 
-export json checksid(json request, Server*, tcpsocket*){
+export json checksid(json request, ServerConfig*, tcpclient<address_t>*){
 	std::string sid = request["parameters"]["sid"].isString() ? request["parameters"]["sid"].toString() :
 						(request["cookies"]["sid"].isString() ? request["cookies"]["sid"].toString() : "");
 	spdlog::info("checksid(sid: \'{}\')", sid);
@@ -417,7 +417,7 @@ export json checksid(json request, Server*, tcpsocket*){
 	};
 }
 
-export json signout(json request, Server*, tcpsocket*){
+export json signout(json request, ServerConfig*, tcpclient<address_t>*){
 	std::string sid = request["parameters"]["sid"].isString() ? request["parameters"]["sid"].toString() :
 						(request["cookies"]["sid"].isString() ? request["cookies"]["sid"].toString() : "");
 	db->exec("update users set sid = \'\', session = \'\' where sid like ?1;", {sid});
@@ -432,7 +432,7 @@ export json signout(json request, Server*, tcpsocket*){
 	};
 }
 
-export json getUserData(json request, Server*, tcpsocket*){
+export json getUserData(json request, ServerConfig*, tcpclient<address_t>*){
 	std::string username = request["parameters"]["username"].isString() ? request["parameters"]["username"].toString() : "";
 	std::string password = request["parameters"]["password"].isString() ? request["parameters"]["password"].toString() : "";
 	std::string sid = request["parameters"]["sid"].isString() ? request["parameters"]["sid"].toString() :
@@ -461,7 +461,7 @@ export json getUserData(json request, Server*, tcpsocket*){
 	};
 }
 
-export json changeUserData(json request, Server*, tcpsocket *client) {
+export json changeUserData(json request, ServerConfig*, tcpclient<address_t> *client) {
 	std::string payload = client->recv(request["header"]["content-length"].toInt());
 	json data = json::parse(payload);
 
@@ -498,7 +498,7 @@ export json changeUserData(json request, Server*, tcpsocket *client) {
 	};
 }
 
-export json optionsAlwaysOK(json request, Server*, tcpsocket*){
+export json optionsAlwaysOK(json request, ServerConfig*, tcpclient<address_t>*){
 	return json::object{
 		{"request", request},
 		{"version", "HTTP/1.1"},

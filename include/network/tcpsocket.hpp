@@ -3,87 +3,170 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <sys/select.h>
+#include <fcntl.h>
 
-#if defined(WINDOWS)
-	#include <winsock2.h>
+#if defined(__USE_MISC)
+	#undef __USE_MISC
+	#include <unistd.h>
+	#define __USE_MISC
 #else
-	#include <errno.h>
-	#include <sys/types.h>
-	#include <sys/socket.h>
-	#include <netinet/in.h>
-	#include <netdb.h>
-	#include <arpa/inet.h>
-	#include <sys/select.h>
-	#include <fcntl.h>
+	#include <unistd.h>
 #endif
 
+#include <algorithm>
 #include <iostream>
-#include <string>
 #include <limits>
+#include <string>
 
-#include <spdlog/spdlog.h>
-
-#define CHUNK_SIZE 512
-
-namespace network{
-	//include unistd.h insde namespace network to avoid conflict between namespace crypt and char* crypt(char*, char*);
-	#include <unistd.h>
-
-	struct address{
-		address(unsigned v = Any);
-		enum types : unsigned{
-			Any = INADDR_ANY,
-			Broadcast = INADDR_BROADCAST,
-			LoopBack = INADDR_LOOPBACK,
-		#if defined(LINUX)
-			UnspecGroup = INADDR_UNSPEC_GROUP,
-			AllHostGroup = INADDR_ALLHOSTS_GROUP,
-			AllRtrsGroup = INADDR_ALLRTRS_GROUP,
-			MaxLocalGroup = INADDR_MAX_LOCAL_GROUP,
-		#endif
-			None
-		};
-		unsigned val;
+namespace inet {
+	template<typename address_t>
+	class tcpsocket {
+	public:
+		tcpsocket(int type, int protocol) {
+			handle = socket(address_t::family(), type, protocol);
+		}
+		tcpsocket(tcpsocket &&other) : handle(other.handle) {
+			other.handle = -1;
+		}
+		~tcpsocket() {
+			shutdown();
+			close();
+		}
+		operator bool() {
+			return  handle >= 0;
+		}
+		tcpsocket& operator=(tcpsocket &&other) {
+			std::swap(other.handle, handle);
+			return *this;
+		}
+		bool connected() {
+			int error = 0;
+			socklen_t errorlen = sizeof(error);
+			return getsockopt(handle, SOL_SOCKET, SO_ERROR, &error, &errorlen) == 0;
+		}
+		bool shutdown(int method = SHUT_RDWR) {
+			if(handle >= 0) {
+				return ::shutdown(handle, method) >= 0;
+			}
+			return false;
+		}
+		bool close() {
+			if(handle >= 0) {
+				return ::close(handle) >= 0;
+			}
+			return false;
+		}
+		int setopt(int level, int option, const void *value, socklen_t size) {}
+		int getopt(int level, int option, const void *value, socklen_t *size) {}
+	protected:
+		tcpsocket(int handle) : handle(handle) {}
+		int handle;
+	private:
+		tcpsocket(const tcpsocket<address_t> &other) = delete;	
+		tcpsocket<address_t>& operator=(const tcpsocket<address_t> &other) = delete;	
 	};
 
-	class tcpsocket{
+	template<typename address_t>
+	class tcpclient : public tcpsocket<address_t> {
+		using base = tcpsocket<address_t>;
 	public:
-		tcpsocket(int af, int type, int protocol);
+		tcpclient() : base(SOCK_STREAM, 0) {}
+		tcpclient(int handle) : base(handle) {}
 
-		#if defined(WINDOWS)
-			tcpsocket(SOCKET s, SOCKADDR_IN addr);
-		#else
-			tcpsocket(int handle, struct sockaddr_in addr);
-		#endif
+		bool connect(address_t server) {
+			return ::connect(base::handle, server.addrptr(), server.addrsize()) >= 0;
+		}
+		void disconnect() {
+			base::shutdown();
+			base::close();
+		}
+		size_t recv(char *buffer, size_t size) {
+			return ::recv(base::handle, buffer, size, MSG_NOSIGNAL);
+		}
+		inline void recv(std::string &buffer) {
+			size_t size = recv(&buffer[0], buffer.size());
+			if(size < buffer.size()) {
+				buffer.resize(size);
+			}
+		}
+		inline size_t recvchar(char &c) {
+			return recv(&c, 1);
+		}
+		inline char recvchar() {
+			char c;
+			recvchar(c);
+			return c;
+		}
+		inline std::string recv(size_t size) {
+			std::string buffer(size, '\0');
+			recv(buffer);
+			return buffer;
+		}
+		std::string recvline(char delim = '\n', size_t max = std::numeric_limits<size_t>::max()) {
+			std::string buffer;
+			buffer.reserve(std::min(max, size_t(1024)));
+			char c;
+			while(recvchar(c) == 1 && c != delim && buffer.size() + 1 < max) {
+				if(c != '\r')
+					buffer.push_back(c);
+			}
+			return buffer;
+		}
+		size_t send(const char *buffer, size_t size) {
+			return ::send(base::handle, buffer, size, MSG_NOSIGNAL);
+		}
+		inline size_t send(const std::string &buffer) {
+			return send(buffer.c_str(), buffer.size());
+		}
+		inline size_t sendchar(char c) {
+			return send(&c, 1);
+		}
+	};
 
-		virtual ~tcpsocket();
-
-		void bind(address addr = address::Any, unsigned short port = 80);
-		virtual void listen();
-		virtual tcpsocket* accept(struct timeval timeout);
-		virtual bool connect(std::string host, unsigned short port = 80);
-		virtual void disconnect();
-
-		bool isConnected();
-		std::string getError();
-		std::string getClientIP();
-
-		//virtual bool send(const char *buffer, size_t size);
-		virtual bool send(std::string data);
-		//virtual bool sendChar(int c);
-		//virtual void recv(char *buffer, size_t size);
-		virtual std::string recv(int len);
-		virtual std::string recvLine(char delim = '\n', size_t maxlen = std::numeric_limits<size_t>::max());
-		//virtual int recvChar();
+	template<typename address_t>
+	class tcpserver : public tcpsocket<address_t> {
+		using base = tcpsocket<address_t>;
+	public:
+		tcpserver() : base(SOCK_STREAM, 0) {}
+		bool bind(address_t addr) {
+			return ::bind(base::handle, addr.addrptr(), addr.addrsize()) >= 0;
+		}
+		bool listen(size_t queuesize = 4) {
+			if(::listen(base::handle, queuesize) >= 0) {
+				FD_ZERO(&master);
+				FD_ZERO(&readfds);
+				FD_SET(base::handle, &master);
+				return true;
+			}
+			return false;
+		}
+		tcpclient<address_t> accept(address_t *addr = nullptr) {
+			memcpy(&readfds, &master, sizeof(master));
+			int nready = select(base::handle + 1, &readfds, nullptr, nullptr, nullptr);
+			for (int i = 0; i <= base::handle && nready > 0; i++) {
+				if (FD_ISSET(i, &readfds)) {
+					nready--;
+					if(i == base::handle) {
+						if(addr) {
+							unsigned size = addr->addrsize();
+							return tcpclient<address_t>(::accept(base::handle, addr->addrptr(), &size));
+						}
+						else {
+							return tcpclient<address_t>(::accept(base::handle, nullptr, nullptr));
+						}
+					}
+				}
+			}
+			return tcpclient<address_t>(-1);
+		}
 	private:
-		bool connected = false;
-		#if defined(WINDOWS)
-			SOCKET handle;
-			SOCKADDR_IN client;
-		#else
-			int handle;
-			struct sockaddr_in client;
-			fd_set master, readfds;
-		#endif
+		fd_set master, readfds;
 	};
 }

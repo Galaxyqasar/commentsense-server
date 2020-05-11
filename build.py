@@ -13,7 +13,7 @@ progs = {"gcc" : "gcc" if system in ["Linux", "Darwin"] else parrent + "/cygwin6
 		 "g++" : "g++" if system in ["Linux", "Darwin"] else parrent + "/cygwin64/bin/g++.exe",
 		 "ld" : "ld" if system in ["Linux", "Darwin"] else parrent + "/cygwin64/bin/ld.exe"}
 
-options = ["-D SPDLOG_COMPILED_LIB", "-O0", "-D LTC_SOURCE", "-D LTC_NO_ROLC"]
+options = ["-D SPDLOG_COMPILED_LIB", "-O0", "-D LTC_SOURCE", "-D LTC_NO_ROLC", "-D ASIO_SEPARATE_COMPILATION", "-D ASIO_STANDALONE"]
 link = []
 rebuild = False
 
@@ -90,9 +90,9 @@ def buildProg(src, dest, args):
 
 libs = []
 for m,f,e in src():
-    if e in ["c", "cpp"]:
-        res = compile(f, {"c":gcc, "cpp":gpp}[e], ["-fpic", "-Wall"] + options)
-        libs.append(res)
+	if e in ["c", "cpp"]:
+		res = compile(f, {"c":gcc, "cpp":gpp}[e], ["-fpic", "-Wall"] + options)
+		libs.append(res)
 
 
 link(libs, "build/yeet.o", ["-relocatable"])

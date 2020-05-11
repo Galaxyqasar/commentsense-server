@@ -1,6 +1,6 @@
 #include <network/statuscodes.hpp>
 
-namespace network{
+namespace inet {
 	std::string HttpStatusReasonPhrase(int code){
 		switch (code){
 			/*####### 1xx - Informational #######*/

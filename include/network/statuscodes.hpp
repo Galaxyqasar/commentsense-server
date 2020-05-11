@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace network{
+namespace inet {
 	enum HttpStatusCode
 	{
 		/*####### 1xx - Informational #######*/
