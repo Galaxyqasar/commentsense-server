@@ -67,7 +67,7 @@ namespace inet {
 		int setopt(int level, int option, const void *value, socklen_t size) {
 			return setsockopt(handle, level, option, value, size);
 		}
-		int getopt(int level, int option, const void *value, socklen_t *size) {
+		int getopt(int level, int option, void *value, socklen_t *size) {
 			return getsockopt(handle, level, option, value, size);
 		}
 

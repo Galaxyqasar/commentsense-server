@@ -25,7 +25,7 @@ namespace inet {
 
 	std::string ipv4address::to_string() {
 		std::string ipaddress(16, ' ');
-		inet_ntop(AF_INET, &addr.sin_addr, &ipaddress[0], INET_ADDRSTRLEN);
+		inet_ntop(family(), &addr.sin_addr, &ipaddress[0], INET_ADDRSTRLEN);
 		return ipaddress;
 	} 
 	ipv6address::ipv6address(std::string host, uint16_t port) {
@@ -51,7 +51,7 @@ namespace inet {
 	}
 	std::string ipv6address::to_string() {
 		std::string ipaddress(45, ' ');
-		inet_ntop(AF_INET, &addr.sin6_addr, &ipaddress[0], INET_ADDRSTRLEN);
+		inet_ntop(family(), &addr.sin6_addr, &ipaddress[0], INET_ADDRSTRLEN);
 		return ipaddress;
 	}
 }

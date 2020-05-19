@@ -129,6 +129,7 @@ public:
 			inet::tcpclient<address_t> client = server.accept(1s, &peeraddr);
 			if(client) {
 				std::thread([this](inet::tcpclient<address_t> client, address_t peeraddr){
+					spdlog::info("client connected from {}", peeraddr.to_string());
 					try {
 						client.setRecvTimeout(30s);
 						client.setSendTimeout(30s);

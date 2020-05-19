@@ -103,6 +103,13 @@ void MessageCallback(const asSMessageInfo *msg) {
 	buffer<<"["<<msg->row<<":"<<msg->col<<"] "<<msg->section<<" : "<<msg->message<<"\n";
 }
 
+using namespace inet;
+#if defined(IPV6)
+	using address_t = inet::ipv6address;
+#else
+	using address_t = inet::ipv4address;
+#endif
+
 int main(int argc, char *argv[]) {
 	struct sigaction s{[](int i){
 		spdlog::warn("received SIGPIPE: {}", i);
@@ -127,16 +134,16 @@ int main(int argc, char *argv[]) {
 	RegisterStdString(engine);
 	RegisterStdStringUtils(engine);
 
-	HttpServer<inet::ipv4address> server(passPhrase);
+	HttpServer<address_t> server(passPhrase);
 
-	engine->RegisterGlobalFunction("void setOption(string name, int state)", asMETHODPR(HttpServer<inet::ipv4address>, setOption, (std::string, int), void), asCALL_THISCALL_ASGLOBAL, &server);
-	engine->RegisterGlobalFunction("void setPluginActive(string name, bool active)", asMETHODPR(HttpServer<inet::ipv4address>, setPluginActive, (std::string, bool), void), asCALL_THISCALL_ASGLOBAL, &server);
-	engine->RegisterGlobalFunction("void stop()", asMETHODPR(HttpServer<inet::ipv4address>, stop, (void), void), asCALL_THISCALL_ASGLOBAL, &server);
+	engine->RegisterGlobalFunction("void setOption(string name, int state)", asMETHODPR(HttpServer<address_t>, setOption, (std::string, int), void), asCALL_THISCALL_ASGLOBAL, &server);
+	engine->RegisterGlobalFunction("void setPluginActive(string name, bool active)", asMETHODPR(HttpServer<address_t>, setPluginActive, (std::string, bool), void), asCALL_THISCALL_ASGLOBAL, &server);
+	engine->RegisterGlobalFunction("void stop()", asMETHODPR(HttpServer<address_t>, stop, (void), void), asCALL_THISCALL_ASGLOBAL, &server);
 	engine->RegisterGlobalFunction("void print(string val)", asFUNCTIONPR(print, (std::string), void), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void print(int val)", asFUNCTIONPR(print, (int), void), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void print(double val)", asFUNCTIONPR(print, (double), void), asCALL_CDECL);
 	server.registerPlugin({GET, "call as function", "/api/server", 
-		[engine](json request, ServerConfig *server, inet::tcpclient<inet::ipv4address>&){
+		[engine](json request, ServerConfig *server, inet::tcpclient<address_t>&){
 			buffer.str("");	//clear buffer
 			std::string code = request["parameters"]["code"].toString();
 			if(server->getPassPhrase().length())
@@ -156,6 +163,6 @@ int main(int argc, char *argv[]) {
 	});
 
 	server.loadPlugins("./plugins.json");
-	server.run(inet::ipv4address(inet::ipv4address::Any, 80));
+	server.run(address_t(address_t::Any, 80));
 	return 0;
 }

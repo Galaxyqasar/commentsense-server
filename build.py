@@ -20,6 +20,12 @@ rebuild = False
 if "--rebuild" in args:
 	rebuild = True
 
+if "-ipv6" in args:
+	options += ["-D IPV6"]
+
+if "-r" in args or "--release" in args:
+	options += ["-O3"]
+
 def prog(name):
 	return progs[name]
 

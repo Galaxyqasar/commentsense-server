@@ -15,8 +15,11 @@
 #define export extern "C" __attribute__((visibility ("default")))
 
 using namespace inet;
-using address_t = inet::ipv4address;
-
+#if defined(IPV6)
+	using address_t = inet::ipv6address;
+#else
+	using address_t = inet::ipv4address;
+#endif
 const size_t max_chunk_size = 50*1024*1024;	//50 Mb
 
 hidden sqlite::database *db = nullptr;
