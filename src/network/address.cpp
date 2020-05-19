@@ -51,7 +51,7 @@ namespace inet {
 	}
 	std::string ipv6address::to_string() {
 		std::string ipaddress(45, ' ');
-		inet_ntop(family(), &addr.sin6_addr, &ipaddress[0], INET_ADDRSTRLEN);
+		inet_ntop(family(), &addr.sin6_addr, &ipaddress[0], INET6_ADDRSTRLEN);
 		return ipaddress;
 	}
 }
