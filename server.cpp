@@ -120,10 +120,13 @@ int main(int argc, char *argv[]) {
 
 	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%t] [%^%l%$]\t%v");
 	std::string passPhrase = "";
+	bool cors = false;
 
 	for(unsigned i = 0; i < args.size(); i++) {
 		if(args[i] == "-p" && i < args.size() - 1)
 			passPhrase = stringFromHex(toUpper(crypt::sha256::hash(args[i + 1])));
+		if(args[i] == "-cors" && i < args.size() - 1)
+			cors = true;
 	}
 
 	asIScriptEngine *engine = asCreateScriptEngine();
@@ -167,6 +170,7 @@ int main(int argc, char *argv[]) {
 
 
 	std::cout<<server.getPassPhrase()<<"\n";
+	server.setOption("cors", cors);
 	uint16_t port = 80;
 #if defined(__TLS__)
 	port = 443;
