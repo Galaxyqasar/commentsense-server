@@ -3,6 +3,7 @@
 #include <network/address.hpp>
 #include <network/statuscodes.hpp>
 #include <network/tcpsocket.hpp>
+#include <network/tlssocket.hpp>
 #include <utils/json.hpp>
 #include <utils/dll.hpp>
 
@@ -12,6 +13,13 @@
 #include <chrono>
 
 using namespace std::chrono_literals;
+using namespace inet;
+
+#if defined(IPV6)
+	using address_t = inet::ipv6address;
+#else
+	using address_t = inet::ipv4address;
+#endif
 
 class ServerConfig {
 public:
@@ -56,23 +64,23 @@ public:
 		int method;
 		std::string name;
 		std::string suburl;
-		std::function<json(json, ServerConfig*, inet::tcpclient<address_t>&)> callback;
+		std::function<json(json, ServerConfig*, tcpclient<address_t>*)> callback;
 		bool active;
 	};
 
 	template <typename ...Args>
 	HttpServer(Args ...args) : ServerConfig(args...) {}
 
-	json recvRequest(inet::tcpclient<address_t> &client) {
+	json recvRequest(tcpclient<address_t> *client) {
 		return json::object{
-			{"method", parseMethod(client.recvline(' ', 8))},
-			{"url", client.recvline(' ', 2048)},
-			{"version", client.recvline('\n', 16)},
+			{"method", parseMethod(client->recvline(' ', 8))},
+			{"url", client->recvline(' ', 2048)},
+			{"version", client->recvline('\n', 16)},
 			{"header", [&client]() -> json::object {
 				json::object headers;
 				std::string line;
 				do {
-					line = client.recvline();
+					line = client->recvline();
 					size_t pos = line.find(':');
 					if(line.size() >= 3 && pos != std::string::npos && pos > 0 && pos < line.size() - 1) {
 						headers[toLower(std::string(line.begin(), line.begin() + pos))] = toLower(std::string(line.begin() + pos + 1, line.end()));
@@ -121,18 +129,23 @@ public:
 	}
 	void run(address_t addr) {
 		quit = false;
-		inet::tcpserver<address_t> server;
-		server.bind(addr);
-		server.listen(64);
+
+#if defined(__TLS__)
+		tcpserver<address_t> *server = new tlsserver<address_t>("./localhost.crt", "./localhost.key");
+#else
+		tcpserver<address_t> *server = new tcpserver<address_t>();
+#endif
+		server->bind(addr);
+		server->listen(64);
 		while(!quit) {
 			address_t peeraddr;
-			inet::tcpclient<address_t> client = server.accept(1s, &peeraddr);
+			tcpclient<address_t> *client = server->accept(1s, &peeraddr);
 			if(client) {
-				std::thread([this](inet::tcpclient<address_t> client, address_t peeraddr){
+				std::thread([this](tcpclient<address_t> *client, address_t peeraddr){
 					spdlog::info("client connected from {}", peeraddr.to_string());
 					try {
-						client.setRecvTimeout(30s);
-						client.setSendTimeout(30s);
+						client->setRecvTimeout(30s);
+						client->setSendTimeout(30s);
 						json request = recvRequest(client);
 						parseRequest(request);
 						spdlog::info("request: {}", request.print(json::minified));
@@ -143,15 +156,17 @@ public:
 						json response = handleClient(client, request);
 						std::string res = constructHttpResponse(response, this);
 						spdlog::info("sending response: {}", removeAll(res.substr(0, res.find("\n\n")), "\n"));
-						client.send(res);
+						client->send(res);
 					} catch (std::exception &e) {
 						std::cout<<e.what();
 					}
-				}, std::move(client), peeraddr).detach();
+					delete client;
+				}, client, peeraddr).detach();
 			}
 		}
+		delete server;
 	}
-	json handleClient(inet::tcpclient<address_t> &client, json &request) {
+	json handleClient(tcpclient<address_t> *client, json &request) {
 		int method = request["method"].toInt();
 		for(const Plugin &p : plugins){
 			if(p.active && (p.method & method) && (request["url"].toString().find(p.suburl) == 0)){
@@ -205,10 +220,10 @@ public:
 				std::string name = e["name"].toString();
 				std::string suburl = e["suburl"].toString();
 				utils::dll &lib = loadLib(libname);
-				if(lib.get<json(*)(json, ServerConfig*, inet::tcpclient<address_t>&)>(func)) {
+				if(lib.get<json(*)(json, ServerConfig*, tcpclient<address_t>*)>(func)) {
 					plugins.push_back(Plugin{
 						parseMethod(method), name, suburl,
-						lib.get<json(*)(json, ServerConfig*, inet::tcpclient<address_t>&)>(func), true
+						lib.get<json(*)(json, ServerConfig*, tcpclient<address_t>*)>(func), true
 					});
 				}
 			}

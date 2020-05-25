@@ -23,6 +23,9 @@ if "--rebuild" in args:
 if "-ipv6" in args:
 	options += ["-D IPV6"]
 
+if "-ssl" in args:
+	options += ["-D __TLS__"]
+
 if "-r" in args or "--release" in args:
 	options += ["-O3"]
 

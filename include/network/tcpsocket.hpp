@@ -37,8 +37,7 @@ namespace inet {
 			other.handle = -1;
 		}
 		~tcpsocket() {
-			shutdown();
-			close();
+			disconnect();
 		}
 		operator bool() {
 			return  handle >= 0;
@@ -64,6 +63,10 @@ namespace inet {
 			}
 			return false;
 		}
+		virtual void disconnect() {
+			shutdown();
+			close();
+		}
 		int setopt(int level, int option, const void *value, socklen_t size) {
 			return setsockopt(handle, level, option, value, size);
 		}
@@ -74,6 +77,7 @@ namespace inet {
 	protected:
 		tcpsocket(int handle) : handle(handle) {}
 		int handle;
+		
 	private:
 		tcpsocket(const tcpsocket<address_t> &other) = delete;	
 		tcpsocket<address_t>& operator=(const tcpsocket<address_t> &other) = delete;	
@@ -100,14 +104,10 @@ namespace inet {
 			base::setopt(SOL_SOCKET, SO_SNDTIMEO, &t, sizeof(t));
 		}
 
-		bool connect(address_t server) {
+		virtual bool connect(address_t server) {
 			return ::connect(base::handle, server.addrptr(), server.addrsize()) >= 0;
 		}
-		void disconnect() {
-			base::shutdown();
-			base::close();
-		}
-		size_t recv(char *buffer, size_t size) {
+		virtual size_t recv(char *buffer, size_t size) {
 			return ::recv(base::handle, buffer, size, MSG_NOSIGNAL);
 		}
 		inline void recv(std::string &buffer) {
@@ -139,7 +139,7 @@ namespace inet {
 			}
 			return buffer;
 		}
-		size_t send(const char *buffer, size_t size) {
+		virtual size_t send(const char *buffer, size_t size) {
 			return ::send(base::handle, buffer, size, MSG_NOSIGNAL);
 		}
 		inline size_t send(const std::string &buffer) {
@@ -167,7 +167,7 @@ namespace inet {
 			}
 			return false;
 		}
-		tcpclient<address_t> accept(std::chrono::duration<int> timeout, address_t *addr = nullptr) {
+		virtual tcpclient<address_t>* accept(std::chrono::duration<int> timeout, address_t *addr = nullptr) {
 			std::chrono::seconds seconds = std::chrono::duration_cast<std::chrono::seconds>(timeout);
 			std::chrono::microseconds microseconds = std::chrono::duration_cast<std::chrono::microseconds>(timeout - seconds);
 			struct timeval t{seconds.count(), microseconds.count()};
@@ -179,17 +179,17 @@ namespace inet {
 					if(i == base::handle) {
 						if(addr) {
 							unsigned size = addr->addrsize();
-							return tcpclient<address_t>(::accept(base::handle, addr->addrptr(), &size));
+							return new tcpclient<address_t>(::accept(base::handle, addr->addrptr(), &size));
 						}
 						else {
-							return tcpclient<address_t>(::accept(base::handle, nullptr, nullptr));
+							return new tcpclient<address_t>(::accept(base::handle, nullptr, nullptr));
 						}
 					}
 				}
 			}
-			return tcpclient<address_t>(-1);
+			return nullptr;
 		}
-	private:
+	//protected:
 		fd_set master, readfds;
 	};
 }

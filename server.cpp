@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
 
 	for(unsigned i = 0; i < args.size(); i++) {
 		if(args[i] == "-p" && i < args.size() - 1)
-			passPhrase = args[i + 1];
+			passPhrase = crypt::sha256::hash(args[i + 1]);
 	}
 
 	asIScriptEngine *engine = asCreateScriptEngine();
@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
 	engine->RegisterGlobalFunction("void print(int val)", asFUNCTIONPR(print, (int), void), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void print(double val)", asFUNCTIONPR(print, (double), void), asCALL_CDECL);
 	server.registerPlugin({GET, "call as function", "/api/server", 
-		[engine](json request, ServerConfig *server, inet::tcpclient<address_t>&){
+		[engine](json request, ServerConfig *server, inet::tcpclient<address_t>*){
 			buffer.str("");	//clear buffer
 			std::string code = request["parameters"]["code"].toString();
 			if(server->getPassPhrase().length())
@@ -162,7 +162,12 @@ int main(int argc, char *argv[]) {
 		}, true
 	});
 
+
+	uint16_t port = 80;
+#if defined(__TLS__)
+	port = 443;
+#endif
 	server.loadPlugins("./plugins.json");
-	server.run(address_t(address_t::Any, 80));
+	server.run(address_t(address_t::Any, port));
 	return 0;
 }
