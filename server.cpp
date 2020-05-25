@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
 
 	for(unsigned i = 0; i < args.size(); i++) {
 		if(args[i] == "-p" && i < args.size() - 1)
-			passPhrase = crypt::sha256::hash(args[i + 1]);
+			passPhrase = stringFromHex(toUpper(crypt::sha256::hash(args[i + 1])));
 	}
 
 	asIScriptEngine *engine = asCreateScriptEngine();
@@ -152,12 +152,15 @@ int main(int argc, char *argv[]) {
 
 			ExecuteString(engine, code.c_str());
 			asThreadCleanup();
+			std::string result = buffer.str();
+			if(server->getPassPhrase().length())
+				result = crypt::rijndael(result, server->getPassPhrase(), crypt::encrypt);
 			return json::object{
 				{"request", request},
 				{"version", "HTTP/1.1"},
 				{"status", 200},
 				{"header", json::object{}},
-				{"data", buffer.str()}
+				{"data", result}
 			};
 		}, true
 	});

@@ -88,12 +88,12 @@ def link(files, target, args):
 			return
 
 def linkdll(src, dest, soname, args):
-	if check(src, dest):
+	#if check(src, dest):
 		print("linking ", dest)
 		gcc([src, "-o", dest, "-shared", "-fpic", "-Wl,-soname=" + soname] + args)
 
 def buildProg(src, dest, args):
-	if check(src, dest):
+	#if check(src, dest):
 		print("building ", dest)
 		gpp([src, "-o", dest, "-Iinclude"] + args)
 

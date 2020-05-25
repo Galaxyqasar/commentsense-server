@@ -4,4 +4,5 @@
 
 namespace crypt {
 	std::string rijndael(std::string source, std::string key, int mode);
+	std::string rijndael(std::string source, std::string key, int mode, std::string iv);
 }

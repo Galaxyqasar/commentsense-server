@@ -7,6 +7,8 @@
 #include <utils/json.hpp>
 #include <utils/dll.hpp>
 
+#include <tomcrypt/tomcrypt.h>
+
 #include <map>
 #include <string>
 #include <thread>
