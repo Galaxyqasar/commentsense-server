@@ -29,6 +29,9 @@ if "-ssl" in args:
 if "-r" in args or "--release" in args:
 	options += ["-O3"]
 
+if "--custom-build-for-niclas" in args or "-n" in args:
+	options += ["-D __CUSTOM_BUILD_FOR_NICLAS__"]
+
 def prog(name):
 	return progs[name]
 
