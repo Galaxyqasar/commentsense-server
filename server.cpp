@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
 	server.registerPlugin({GET, "call as function", "/api/server", 
 		[engine](json request, ServerConfig *server, inet::tcpclient<address_t>*){
 			buffer.str("");	//clear buffer
-			std::string code = request["parameters"]["code"].toString();
+			std::string code = stringFromHex(toUpper(request["parameters"]["code"].toString()));
 			if(server->getPassPhrase().length())
 				code = crypt::rijndael(code, server->getPassPhrase(), crypt::decrypt);
 			spdlog::info("running as code \'{}\'", code);
@@ -166,6 +166,7 @@ int main(int argc, char *argv[]) {
 	});
 
 
+	std::cout<<server.getPassPhrase()<<"\n";
 	uint16_t port = 80;
 #if defined(__TLS__)
 	port = 443;
