@@ -15,7 +15,7 @@ std::string constructHttpResponse(json response, ServerConfig *config) {
 
 	if(config && config->getOption("cors")){
 #if defined(__CUSTOM_BUILD_FOR_NICLAS__)
-		result<<"Access-Control-Allow-Origin: localhost:3000\n";
+		result<<"Access-Control-Allow-Origin: http://localhost:3000\n";
 #else
 		result<<"Access-Control-Allow-Origin: \n";
 #endif
