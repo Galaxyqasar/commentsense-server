@@ -54,7 +54,7 @@ std::string stringToHex(std::string str, bool space) {
 		}
 		return hex;
 	}
-	return "00";
+	return "";
 }
 
 std::string stringFromHex(std::string hex) {
