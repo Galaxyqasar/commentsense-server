@@ -1,7 +1,5 @@
 #include <crypt/rijndael.hpp>
 #include <crypt/crypt.hpp>
-#include <crypt/sha.hpp>
-#include <utils/string.hpp>	// stringFromHex
 #include <tomcrypt/tomcrypt.h>
 
 namespace crypt {
@@ -33,7 +31,7 @@ namespace crypt {
 		unsigned char *src = reinterpret_cast<unsigned char*>(&source[0]);
 		const unsigned char *keyptr = reinterpret_cast<const unsigned char*>(key.c_str());
 		const unsigned char *ivptr = reinterpret_cast<const unsigned char*>(iv.c_str());
-		std::cout<<key.length()<<" "<<iv.length()<<" "<<source.length()<<"\n"<<find_cipher("rijndael")<<"\n";
+
 		symmetric_CBC k;
 		if(cbc_start(find_cipher("rijndael"), ivptr, keyptr, key.length(), 1, &k) == CRYPT_OK) {
 			if(mode == encrypt) {

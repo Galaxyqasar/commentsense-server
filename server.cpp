@@ -152,16 +152,18 @@ int main(int argc, char *argv[]) {
 	server.registerPlugin({GET, "call as function", "/api/server", 
 		[engine](json request, ServerConfig *server, inet::tcpclient<address_t>*){
 			buffer.str("");	//clear buffer
-			std::string code = stringFromHex(toUpper(request["parameters"]["code"].toString()));
+			std::string code = request["parameters"]["code"].toString();
 			if(server->getPassPhrase().length())
-				code = crypt::rijndael(code, server->getPassPhrase(), crypt::decrypt);
+				code = crypt::rijndael(stringFromHex(toUpper(code)), server->getPassPhrase(), crypt::decrypt);
 			spdlog::info("running as code \'{}\'", code);
 
 			ExecuteString(engine, code.c_str());
 			asThreadCleanup();
 			std::string result = buffer.str();
-			if(server->getPassPhrase().length())
+			if(server->getPassPhrase().length()) {
 				result = crypt::rijndael(result, server->getPassPhrase(), crypt::encrypt);
+				result = toLower(stringToHex(result));
+			}
 			return json::object{
 				{"request", request},
 				{"version", "HTTP/1.1"},
@@ -171,7 +173,6 @@ int main(int argc, char *argv[]) {
 			};
 		}, true
 	});
-
 
 	std::cout<<server.getPassPhrase()<<"\n";
 	(&server)->setOption("cors", cors);
