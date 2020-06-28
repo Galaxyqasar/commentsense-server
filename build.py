@@ -2,6 +2,8 @@ import os
 import sys
 import platform
 import subprocess
+from functools import partial
+from multiprocessing.dummy import Pool
 from shutil import copyfile, copytree
 
 myEnv = os.environ.copy()
@@ -13,9 +15,9 @@ progs = {"gcc" : "gcc" if system in ["Linux", "Darwin"] else parrent + "/cygwin6
 		 "g++" : "g++" if system in ["Linux", "Darwin"] else parrent + "/cygwin64/bin/g++.exe",
 		 "ld" : "ld" if system in ["Linux", "Darwin"] else parrent + "/cygwin64/bin/ld.exe"}
 
-options = ["-D SPDLOG_COMPILED_LIB", "-O0", "-D LTC_SOURCE", "-D LTC_NO_ROLC", "-D ASIO_SEPARATE_COMPILATION", "-D ASIO_STANDALONE"]
-link = []
+options = ["-D SPDLOG_COMPILED_LIB", "-D LTC_SOURCE", "-D LTC_NO_ROLC"]
 rebuild = False
+threads = 4
 
 if "--rebuild" in args:
 	rebuild = True
@@ -25,12 +27,17 @@ if "-ipv6" in args:
 
 if "-ssl" in args:
 	options += ["-D __TLS__"]
+	rebuild = True
 
 if "-r" in args or "--release" in args:
 	options += ["-O3"]
 
 if "--custom-build-for-niclas" in args or "-n" in args:
 	options += ["-D __CUSTOM_BUILD_FOR_NICLAS__"]
+
+def run(cmd):
+	#print(cmd)
+	subprocess.run(cmd, shell=True, env=myEnv)
 
 def prog(name):
 	return progs[name]
@@ -48,12 +55,18 @@ def makedir(dir):
 	if not os.path.isdir(dir):
 		os.makedirs(dir)
 
+def gcccmd(args):
+	return ' '.join([prog("gcc")] + args + ["-std=c11"])
+def gppcmd(args):
+	return ' '.join([prog("g++")] + args + ["-std=c++17"])
+def ldcmd(args):
+	return ' '.join([prog("ld")] + args)
 def gcc(args):
-	subprocess.run(' '.join([prog("gcc")] + args + ["-std=c11"]), shell=True, env=myEnv)
+	run(gcccmd(args))
 def gpp(args):
-	subprocess.run(' '.join([prog("g++")] + args + ["-std=c++17"]), shell=True, env=myEnv)
+	run(gppcmd(args))
 def ld(args):
-	subprocess.run(' '.join([prog("ld")] + args), shell=True, env=myEnv)
+	run(gcccmd(args))
 
 def check(src, dest):
 	srh1 = src[:src.rfind('.')+1] + "h"
@@ -61,67 +74,103 @@ def check(src, dest):
 	r = False
 	if os.path.isfile(src) and os.path.isfile(dest):
 		if(os.path.isfile(srh1)):
-			r =  os.path.getmtime(srh1) > os.path.getmtime(dest)
+			r = os.path.getmtime(srh1) > os.path.getmtime(dest)
 		elif(os.path.isfile(srh2)):
-			r =  os.path.getmtime(srh2) > os.path.getmtime(dest)
-		else:
-			r =  os.path.getmtime(src) > os.path.getmtime(dest)
-	elif not os.path.isfile(dest):
+			r = os.path.getmtime(srh2) > os.path.getmtime(dest)
+		r = r or os.path.getmtime(src) > os.path.getmtime(dest)
+	else:
 		r =  True
 	return r or rebuild
 
-def compile(file, compiler, args):
+def compilecmd(file, compiler, args):
 	src = "src/" + file
 	dest = "build/" + file[:file.find('.')] + '.o'
 	makedir(dest[:dest.rfind('/')])
 	if file.startswith("tomcrypt"):
 		args += ["-Iinclude/tomcrypt"]
-	if file.startswith("tommath"):
+	elif file.startswith("tommath"):
 		args += ["-Iinclude/tommath"]
+	elif file.startswith("soloud"):
+		args += ["-Iinclude/soloud", "-D WITH_ALSA"]
 	if check(src, dest):
-		print("compiling ", src, "->", dest)
-		compiler([src, "-o", dest, "-c", "-Iinclude"] + args)
-	return dest
+		return dest, True, compiler([src, "-o", dest, "-c", "-Iinclude"] + args)
+	return dest, False, ""
 
-def link(files, target, args):
+def linkcmd(files, target, args = []):
 	for f in files:
-		if check(f, target):
-			print("linking ", target)
-			ld(files + ["-o"] + [target] + args)
-			return
+		if not check(f, target):
+			return ""
+	return ldcmd(files + ["-o"] + [target] + args)
 
-def linkdll(src, dest, soname, args):
-	#if check(src, dest):
-		print("linking ", dest)
-		gcc([src, "-o", dest, "-shared", "-fpic", "-Wl,-soname=" + soname] + args)
+def linkdllcmd(src, dest, soname, args = []):
+	if check(src, dest):
+		return gcccmd([src, "-o", dest, "-shared", "-fpic", "-Wl,-soname=" + soname] + args)
+	return ""
 
-def buildProg(src, dest, args):
-	#if check(src, dest):
-		print("building ", dest)
-		gpp([src, "-o", dest, "-Iinclude"] + args)
+def buildProgcmd(src, dest, args = []):
+	if check(src, dest):
+		return gppcmd([src, "-o", dest, "-Iinclude"] + args)
+	return ""
 
-libs = []
-for m,f,e in src():
-	if e in ["c", "cpp"]:
-		res = compile(f, {"c":gcc, "cpp":gpp}[e], ["-fpic", "-Wall"] + options)
-		libs.append(res)
+def compile(file, compiler):
+	res, built, cmd = compilecmd(file, compiler)
+	run(cmd)
+	return res, built
+
+def link(files, target, args = []):
+	run(linkcmd(files, target, args))
+
+def linkdll(files, target, soname, args = []):
+	run(linkdllcmd(files, target, soname, args))
+
+def buildProg(src, dest, args = []):
+	run(buildProgcmd(src, dest, args))
+
+def runCommandList(commands):
+	pool = Pool(threads)
+	pool.map(partial(run), commands)
+	pool.close()
+	pool.join()
 
 
-link(libs, "build/yeet.o", ["-relocatable"])
-linkdll("build/yeet.o", "build/yeet.so", "./yeet.so", [])
+def buildYeetlib():
+	commands = []
+	libs = []
+	relink = rebuild
+	for m,f,e in src():
+		if e in ["c", "cpp"]:
+			res, built, cmd = compilecmd(f, {"c":gcccmd, "cpp":gppcmd}[e], ["-fpic", "-Wall"] + options)
+			commands.append(cmd)
+			libs.append(res)
+			relink = relink or built
 
-if not os.path.isfile("build/server.o") or os.path.getmtime("server.cpp") > os.path.getmtime("build/server.o") or os.path.getmtime("server.hpp") > os.path.getmtime("build/server.o"):
-	gpp(["server.cpp", "-c", "-o", "build/server.o", "-Iinclude", "-fpic"] + options)
-gpp(["build/server.o", "-o", "build/server", "build/yeet.so", "-lpthread", "-ldl"] + options)
-linkdll("build/server.o", "build/server.so", "./server.so", [])
+	runCommandList([cmd for cmd in commands if cmd != ""])
 
-if not os.path.isfile("build/plugin.o") or os.path.getmtime("plugin.cpp") > os.path.getmtime("build/plugin.o") or os.path.getmtime("plugin.hpp") > os.path.getmtime("build/plugin.o"):
-	gpp(["plugin.cpp", "-c", "-o", "build/plugin.o", "-Iinclude", "-fpic"] + options)
-linkdll("build/plugin.o", "build/plugin.so", "./plugin.so", ["build/yeet.so", "build/server.so"])
+	if relink or not os.path.isfile("build/yeet.o") or not os.path.isfile("build/yeet.so"):
+		link(libs, "build/yeet.o", ["-relocatable"])
+		linkdll("build/yeet.o", "build/yeet.so", "./yeet.so", [])
 
-copyfile("plugins.json", "build/plugins.json")
-copyfile("init.sql", "build/init.sql")
+def buildServer():
+	if not os.path.isfile("build/server.o") or os.path.getmtime("server.cpp") > os.path.getmtime("build/server.o") or os.path.getmtime("server.hpp") > os.path.getmtime("build/server.o"):
+		gpp(["server.cpp", "-c", "-o", "build/server.o", "-Iinclude", "-fpic"] + options)
+	gpp(["build/server.o", "-o", "build/server", "build/yeet.so", "-lpthread", "-ldl"] + options)
+	linkdll("build/server.o", "build/server.so", "./server.so", [])
 
-if(os.path.isdir("www") and not os.path.isdir("build/www")):
-	copytree("www", "build/www")
-	copyfile("README.md", "build/www/README.md")
+def buildPlugin():
+	if not os.path.isfile("build/plugin.o") or os.path.getmtime("plugin.cpp") > os.path.getmtime("build/plugin.o") or os.path.getmtime("plugin.hpp") > os.path.getmtime("build/plugin.o"):
+		gpp(["plugin.cpp", "-c", "-o", "build/plugin.o", "-Iinclude", "-fpic"] + options)
+	linkdll("build/plugin.o", "build/plugin.so", "./plugin.so", ["build/yeet.so", "build/server.so"])
+
+def copyResources():
+	copyfile("plugins.json", "build/plugins.json")
+	copyfile("init.sql", "build/init.sql")
+
+	if(os.path.isdir("www") and not os.path.isdir("build/www")):
+		copytree("www", "build/www")
+		copyfile("README.md", "build/www/README.md")
+
+if __name__ == "__main__":
+	buildYeetlib()
+	buildServer()
+	buildPlugin()
+	copyResources()

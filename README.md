@@ -3,16 +3,19 @@
 ## this is the server software for comment-sense
 
 ## dependencies:
+- [frontend](https://github.com/73nici/commentsense-frontend)
+- [angelscript](https://www.angelcode.com/)
+- [spdlog](https://github.com/gabime/spdlog)
 - [sqlite3](https://www.sqlite.org/index.html)
+- [stb](https://github.com/nothings/stb)
 - [tlse](https://github.com/eduardsui/tlse)
 - [libtomcrypt](https://github.com/libtom/libtomcrypt)
 - [libtommath](https://github.com/libtom/libtommath)
 
 ## api:
-
 - get a file:
 	- method: "GET"
-	- sub-url: "/*"
+	- sub-url: "/"
 	- response:
 		- format: auto detects format of the file based on the ending, defaults to ""
 		- possible status-codes: 200, 404, 422
@@ -167,6 +170,19 @@
 			- "/api/signout ..." // requires the sid to be set as a cookie
 			- "/api/signout?username=my username"
 			- "/api/signout?sid=1a2b3c4d5e6f789"
+
+
+- is username available:
+	- method: "GET"
+	- suburl: "/api/checkuser"
+	- arguments: (in the url)
+		- username
+	- response:
+		- possible status-codes: 200, 409
+	- description:
+		- check if the given username is already taken or not
+		- examples:
+			- "/api/checkuser?username=my username"
 
 
 - get user data:
