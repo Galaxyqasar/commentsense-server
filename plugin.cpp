@@ -432,6 +432,18 @@ export json signout(json request, ServerConfig*, tcpclient<address_t>*){
 	};
 }
 
+export json usernameAvailable(json request, ServerConfig*, tcpclient<address_t>*){
+	std::string username = request["parameters"]["username"].isString() ? request["parameters"]["username"].toString() : "";
+	return json::object{
+		{"request", request},
+		{"version", "HTTP/1.1"},
+		{"status", [&username]() -> int {
+			bool exists = std::get<int>(db->exec<1>("select count(name) from users where name = ?1", {username})[0][0]);
+			return exists ? HttpStatus_Conflict : HttpStatus_OK;
+		}()}
+	};
+}
+
 export json getUserData(json request, ServerConfig*, tcpclient<address_t>*){
 	std::string username = request["parameters"]["username"].isString() ? request["parameters"]["username"].toString() : "";
 	std::string password = request["parameters"]["password"].isString() ? request["parameters"]["password"].toString() : "";

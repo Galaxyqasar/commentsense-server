@@ -12,6 +12,7 @@ namespace sqlite{
 		}
 		else if(sqlite3_errcode(this->db) == SQLITE_ERROR) {
 			spdlog::error("sqlite3 error: {}", sqlite3_errmsg(this->db));
+			throw std::runtime_error("sqlite3 error!");
 		}
 		else if(sqlite3_errcode(this->db) == SQLITE_WARNING) {
 			spdlog::warn("sqlite3 warning: {}", sqlite3_errmsg(this->db));
@@ -48,6 +49,7 @@ namespace sqlite{
 		}
 		if(sqlite3_errcode(this->db) == SQLITE_ERROR) {
 			spdlog::error("sqlite3 error: {}", sqlite3_errmsg(this->db));
+			throw std::runtime_error("sqlite3 error!");
 		}
 		else if(sqlite3_errcode(this->db) == SQLITE_WARNING) {
 			spdlog::warn("sqlite3 warning: {}", sqlite3_errmsg(this->db));

@@ -60,11 +60,17 @@
 		"method":"GET",
 		"suburl":"/api/signout"
 	},{
-		"name":"get-user-data",
+		"name":"set-user-data",
 		"dll":"./plugin.so",
-		"function":"getUserData",
-		"method":"GET",
+		"function":"changeUserData",
+		"method":"PATCH",
 		"suburl":"/api/user"
+	},{
+		"name":"is-username-available",
+		"dll":"./plugin.so",
+		"function":"usernameAvailable",
+		"method":"GET",
+		"suburl":"/api/checkuser"
 	},{
 		"name":"set-user-data",
 		"dll":"./plugin.so",

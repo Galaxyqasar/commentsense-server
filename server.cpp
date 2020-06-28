@@ -144,6 +144,7 @@ int main(int argc, char *argv[]) {
 	HttpServer<address_t> server(passPhrase);
 
 	engine->RegisterGlobalFunction("void setOption(string name, int state)", asMETHODPR(HttpServer<address_t>, setOption, (std::string, int), void), asCALL_THISCALL_ASGLOBAL, &server);
+	engine->RegisterGlobalFunction("void setOption(string name, bool state)", asMETHODPR(HttpServer<address_t>, setOption, (std::string, int), void), asCALL_THISCALL_ASGLOBAL, &server);
 	engine->RegisterGlobalFunction("void setPluginActive(string name, bool active)", asMETHODPR(HttpServer<address_t>, setPluginActive, (std::string, bool), void), asCALL_THISCALL_ASGLOBAL, &server);
 	engine->RegisterGlobalFunction("void stop()", asMETHODPR(HttpServer<address_t>, stop, (void), void), asCALL_THISCALL_ASGLOBAL, &server);
 	engine->RegisterGlobalFunction("void print(string val)", asFUNCTIONPR(print, (std::string), void), asCALL_CDECL);
